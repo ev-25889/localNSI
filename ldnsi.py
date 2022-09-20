@@ -884,6 +884,73 @@ class Principal(Base,Nsiconvert):
                 self.ID,a.ID))
 
 
+# начинаем самодеятельность
+class RootRegistryElement(Base, Nsiconvert):
+    __tablename__ = 'discipline'
+
+    # local_id = Column(Integer,primary_key=True)
+    ID = Column(String, primary_key=True, name='external_id')
+    RootRegistryElementName = Column(String, name='title')
+    Status = Column(String, name='status', default='new')
+    Date_sync = Column(DateTime, default=func.now(), name='date_sync')
+
+    # Responce = Column(String, name='responce')
+
+    def __init__(self, a):
+        Base.__init__(self)
+        self.init_from_dict(a, {})
+
+    def to_dict(self):
+        return self.to_dict_base({})
+
+    def update(self, a):
+        if self.ID == a.ID:
+            self.base_update(a)
+        else:
+            logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
+                self.ID, a.ID))
+
+
+class EducationLevelsHighSchool(Base, Nsiconvert):
+    __tablename__ = 'eduprogram'
+
+    ID = Column(String, primary_key=True, name='external_id')
+    EducationLevelsHighSchoolName = Column(String, name='title')
+    SubjectID = Column(String, name='direction_id')
+    EducationLevelsHighSchoolOpenDate = Column(String, name='start_year')
+    EducationLevelsHighSchoolCloseDate = Column(String, name='end_year')
+    Status = Column(String, name='status', default='new')
+
+    def __init__(self, a):
+        Base.__init__(self)
+        fields = {
+            'SubjectID': 'EduProgramSubject',
+        }
+        self.init_from_dict(a, fields)
+
+    def to_dict(self):
+        return self.to_dict_base({})
+
+    def update(self, a):
+        if self.ID == a.ID:
+            self.base_update(a)
+        else:
+            logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
+                self.ID, a.ID))
+
+
+"""
+class EppWorkPlanBase(Base, Nsiconvert):
+    __tablename__ = 'studyplan'
+
+    ID = Column(String, primary_key=True)
+    EppWorkPlanBaseName = Column(String)
+    EppWorkPlanBase
+
+class EppEduPlan(Base, Nsiconvert):
+    __tablename__ = 'eduplan'
+"""
+
 class DoublerNSI():
     """Основной класс работы с базой Локального НСИ
 
