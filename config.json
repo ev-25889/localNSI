@@ -1,0 +1,39 @@
+{
+  "sql": {
+    "server": "localhost",
+    "port": "5432",
+    "database": "myproject",
+    "user": "myprojectuser",
+    "password": "password",
+    "server_type": "postgresql"
+  },
+  "sql2":{
+        "server":"192.168.25.103",
+        "port":"5432",
+        "database":"doubnsitest",
+        "user":"donsitest",
+        "password":"TS4d#dkpf3WE1",
+        "server_type":"postgresql"
+    },
+    "wsgi_app":{
+        "port":"8000"
+    },
+    "nsi":{"sourceId":"uks",
+        "destinationId":"nsi",
+        "elementsCount":25000,
+        "wsdl" : "http://192.168.25.104:8085/services/NSIService?wsdl",
+        "username":"uks",
+        "password":"D6Ks6#ip"
+
+    },
+    "TandemBD":{
+        "database":"test",
+        "user":"tandemdb",
+        "password":"FEfs$*dcn2slts",
+        "host":"192.168.25.103",
+        "port":"5432"
+
+    }
+}
+
+
