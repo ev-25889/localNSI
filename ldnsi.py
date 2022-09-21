@@ -939,6 +939,28 @@ class EducationLevelsHighSchool(Base, Nsiconvert):
                 self.ID, a.ID))
 
 
+class EduProgramSubject(Base, Nsiconvert):
+    __tablename__ = 'subject'
+    # __table_args__ = {'extend_existing': True}
+
+    ID = Column(String, name='id', primary_key=True)
+    EduProgramSubjectName = Column(String, name='direction')
+    EduProgramSubjectSubjectCode = Column(String, name='code_direction')
+
+    def __init__(self, a):
+        Base.__init__(self)
+        self.init_from_dict(a, {})
+
+    def to_dict(self):
+        return self.to_dict_base({})
+
+    def update(self, a):
+        if self.ID == a.ID:
+            self.base_update(a)
+        else:
+            logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
+                self.ID, a.ID))
+
 """
 class EppWorkPlanBase(Base, Nsiconvert):
     __tablename__ = 'studyplan'
