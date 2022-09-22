@@ -1,12 +1,13 @@
+"""Модуль взаимодействия с ГИС СЦОС. Загрузка, обновление, ?удаление? объектов."""
 import psycopg2
 from psycopg2 import Error
 
-atributes_discipline = ['"ID"', '"RootRegistryElementName"']
-atributes_eduprogram = ['external_id', 'title', 'start_year',
+atributes_discipline = ['external_id', 'title']
+atributes_eduprogram = ['external_id', 'title','direction', 'code_direction', 'start_year',
                         'end_year']
 def change_status(query_type, responce=None, external_id=None, status=None):
     """
-    Метод изменяет статус студента в заввисимости от действия (обновление, добавление... (удаление?))
+    Метод изменяет статус записи  в заввисимости от действия (обновление, добавление... (удаление?))
     Параметры: query_type:responce:
     """
     update_query = ''
@@ -24,26 +25,29 @@ def change_status(query_type, responce=None, external_id=None, status=None):
     connection.commit()
 
 # получить ид
-def id_list(object, status=None):
+def id_list(object, status=None, limit=None):
     """
-    Получить список идентификаторов для объектов с определенным статусом
+    Получить список ид для выбранного типа объектов с определенным статусом
     Возвращает:
-    список идентификаторов ID из таблицы **object = object**, для которых **status = new**
+    список идентификаторов ID из таблицы **object = object**, для которых **status = status**
 	"""
+    if limit == None:
+        limit = 500
     if object == 'RootRegistryElement':
         table = 'discipline'
     elif object == 'EducationLevelHighschool':
         table = 'eduprogram'
     else:
         return 'такой таблицы нет'
-    if status is None:
-        select_query = '''select "external_id" from {table}'''.format(table=table)
-    elif status == '':
-        select_query = '''select "external_id" from {table} where "status" is null '''.format(
+
+    if status is None:                              # не указан статус - возвращаем записи со всеми статусами и без них
+        select_query = '''select "external_id" from {table} limit({limit})'''.format(table=table, limit=limit)
+    elif status == '':                              # указан пустой статус - возвращаем записи без статуса
+        select_query = '''select "external_id" from {table} where "status" is null or "status" = '' '''.format(
             table=table)
     else:
-        select_query = '''select "external_id" from {table} where "status" = '{status}' '''.format(
-            table=table, status=status)
+        select_query = '''select "external_id" from {table} where "status" = '{status}' limit({limit})'''.format(
+            table=table, status=status, limit=limit)
 
     cursor.execute(select_query)
     select = cursor.fetchall()
@@ -57,32 +61,35 @@ def id_list(object, status=None):
         return 'записи не найдены'
 
 
-# плучить инфу по ид из бд в словарь
 def make_dict(object):
-    id = id_list(object=object, status='new')
-    if object == 'RootRegistryElement':
-        table = 'discipline'
-        atrib = atributes_discipline
-    elif object == 'EducationLevelHighschool':
-        table = 'eduprogram'
-        atrib = atributes_eduprogram
+    # получить инфу по ид из бд в словарь
+    id = id_list(object=object, status='new', limit=10)
+    if id == 'записи не найдены' or id == 'такой таблицы нет':
+        return 'получить словарь невозможно: {}'.format(id)
     else:
-        return "пустая выборка"
-    atribut = ', '.join(atrib)
-    select_query = '''select {atrib} from {table} where "external_id" in ({id})'''\
-        .format(atrib=atribut,table=table,id=id)
-    cursor.execute(select_query)
-    result = cursor.fetchall()
-    info_list = list()
-    for res in result:
-        one_subject_info = list()
-        for r in res:
-            one_subject_info.append(r)
-        dictant = dict(zip(atrib, one_subject_info))
-        info_list.append(dictant)
-    finall_dict = {'organization_id': '2a0fc6e23c7744478ab6114add556f3e',
-                   'educational_programs': info_list}
-    return finall_dict
+        if object == 'RootRegistryElement':
+            table = 'discipline'
+            atrib = atributes_discipline
+        elif object == 'EducationLevelHighschool':
+            table = 'eduprogram'
+            atrib = atributes_eduprogram
+        else:
+            return "пустая выборка"
+        atribut = ', '.join(atrib)
+        select_query = '''select {atrib} from {table} where "external_id" in ({id})'''\
+            .format(atrib=atribut,table=table,id=id)            # я могу пытаться в запрос вместо списка ид
+        cursor.execute(select_query)                            # засунуть другие ретерны 'записи не найдены' или
+        result = cursor.fetchall()                              # 'такой таблицы нет'
+        info_list = list()
+        for res in result:
+            one_subject_info = list()
+            for r in res:
+                one_subject_info.append(r)
+            dictant = dict(zip(atrib, one_subject_info))
+            info_list.append(dictant)
+        finall_dict = {'organization_id': '2a0fc6e23c7744478ab6114add556f3e',
+                       table: info_list}
+        return finall_dict
 
 
 # сохранить список словарей в словарь
@@ -98,12 +105,12 @@ def save(object, file):
 
 try:
     # Подключение к базе данных
-    connection = psycopg2.connect(user="myprojectuser", password="password",
-								  host="localhost", port="5432", database="myproject")
+    connection = psycopg2.connect(user="donsitest", password="TS4d#dkpf3WE1",
+								  host="192.168.25.103", port="5432", database="doubnsitest")
     cursor = connection.cursor()
-    # print(id_list(object='EducatioLevelHighschool', status='new'))
+    print(make_dict(object='EducationLevelHighschool'))
     # print(dictant(object='RootRegistryElement'))
-    print(make_dict(object='RootRegistryElement'))
+    # print(make_dict(object='RootRegistryElement'))
 except (Exception, Error) as error:
     print("Ошибка при работе с PostgreSQL", error)
 finally:
