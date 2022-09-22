@@ -886,7 +886,7 @@ class Principal(Base,Nsiconvert):
 
 # начинаем самодеятельность
 class RootRegistryElement(Base, Nsiconvert):
-    __tablename__ = 'discipline'
+    __tablename__ = 'disciplines'
 
     # local_id = Column(Integer,primary_key=True)
     ID = Column(String, primary_key=True, name='external_id')
@@ -912,7 +912,7 @@ class RootRegistryElement(Base, Nsiconvert):
 
 
 class EducationLevelsHighSchool(Base, Nsiconvert):
-    __tablename__ = 'eduprogram'
+    __tablename__ = 'educational_programs'
 
     ID = Column(String, primary_key=True, name='external_id')
     EducationLevelsHighSchoolName = Column(String, name='title')
