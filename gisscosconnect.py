@@ -1,5 +1,6 @@
 """Модуль взаимодействия с ГИС СЦОС. Загрузка, обновление, ?удаление? объектов."""
 import psycopg2
+import json
 from psycopg2 import Error
 
 atributes_discipline = ['external_id', 'title']
@@ -91,26 +92,21 @@ def make_dict(object):
                        table: info_list}
         return finall_dict
 
-
-# сохранить список словарей в словарь
-
-# сохранить итоговый словарь в файл
-
-# отправить файл в гис
-
-
-
 def save(object, file):
-    pass
+    # сохранить итоговый словарь в файл
+    body = make_dict(object=object)
+    with open(file, 'w', encoding='utf-8') as fp:  # открываем файл для записи
+        json.dump(body, fp, ensure_ascii=False)
 
 try:
     # Подключение к базе данных
     connection = psycopg2.connect(user="donsitest", password="TS4d#dkpf3WE1",
 								  host="192.168.25.103", port="5432", database="doubnsitest")
     cursor = connection.cursor()
-    print(make_dict(object='EducationLevelHighschool'))
+    #print(make_dict(object='EducationLevelHighschool'))
     # print(dictant(object='RootRegistryElement'))
     # print(make_dict(object='RootRegistryElement'))
+    save(object='RootRegistryElement', file='forGIS.json')
 except (Exception, Error) as error:
     print("Ошибка при работе с PostgreSQL", error)
 finally:
