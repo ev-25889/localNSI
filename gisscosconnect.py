@@ -15,17 +15,20 @@ def change_status(query_type, table, responce=None, external_id=None, status=Non
     """
     update_query = ''
     if query_type == 'post':
+        print(len(responce['results']))
         for i in range(len(responce['results'])):
             external_id = "'" + responce['results'][i]['external_id'] + "'"
             gis_id = "'" + responce['results'][i]['id'] + "'"
-            update_query = '''update {table} set "gisscos_id" = {gis_id}, "status" = 'equal'
-                              where "external_id" = {external_id}'''.format(table=table, gis_id=gis_id, external_id=external_id)
-
+            result = "'" + responce['results'][i]['additional_info'] + "'"
+            update_query = '''update {table} set "gisscos_id" = {gis_id}, "status" = 'equal', 
+                              "responce" = {result} where "external_id" = {external_id}'''.\
+                format(table=table, gis_id=gis_id, result=result, external_id=external_id)
+            cursor.execute(update_query)
+            connection.commit()
     if query_type == 'compare' or query_type == 'put':
        update_query = '''update student_status set "status" = '{}'
                          where "external_id" = {} '''.format(status, external_id)
-    cursor.execute(update_query)
-    connection.commit()
+
 
 # получить ид
 def id_list(object, status=None, limit=None):
@@ -98,12 +101,12 @@ def send_to_gis(object):
         responce = responce.json()
         print(responce)
         print("Запрос в гИС отправился")
-        """
+
         try:
-            print(change_status(query_type='post', responce=responce, table=object_names[object]))
+            change_status(query_type='post', responce=responce, table=object_names[object])
         except Exception:
             print("Ошибка в обновлении БД")
-        """
+        """"""
     except Exception:
         print('(((')
 
@@ -113,7 +116,7 @@ try:
                                   host="192.168.25.103", port="5432", database="doubnsitest")
     cursor = connection.cursor()
     # print(send_to_gis(object='RootRegistryElement'))
-    print(make_dict(object='RootRegistryElement'))
+    print(send_to_gis(object='RootRegistryElement'))
 except (Exception, Error) as error:
     print("Ошибка при работе с PostgreSQL", error)
 finally:
