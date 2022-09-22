@@ -98,6 +98,7 @@ def save(object, file):
     with open(file, 'w', encoding='utf-8') as fp:  # открываем файл для записи
         json.dump(body, fp, ensure_ascii=False)
 
+
 try:
     # Подключение к базе данных
     connection = psycopg2.connect(user="donsitest", password="TS4d#dkpf3WE1",
