@@ -5,9 +5,14 @@ import json
 from psycopg2 import Error
 
 atributes = {'disciplines' : ['external_id', 'title'],
-             'educational_programs' : ['external_id', 'title','direction', 'code_direction', 'start_year', 'end_year']}
+             'educational_programs' : ['external_id', 'title','direction', 'code_direction', 'start_year', 'end_year'],
+             'study_plans' : ['external_id', 'title', 'direction', 'code_direction', 'start_year', 'end_year',
+                              'education_form', 'educational_program']}
 
-object_names = {'RootRegistryElement' : 'disciplines', 'EducationLevelHighschool' : 'educational_programs'}
+object_names = {'RootRegistryElement' : 'disciplines',
+                'EducationLevelHighSchool' : 'educational_programs',
+                'EppWorkPlan' : 'study_plans',
+                'EppWorkPlanBase' : 'study_plans'}
 def change_status(query_type, table, responce=None, external_id=None, status=None):
     """
     Метод изменяет статус записи  в заввисимости от действия (обновление, добавление... (удаление?))
@@ -21,14 +26,24 @@ def change_status(query_type, table, responce=None, external_id=None, status=Non
             gis_id = "'" + responce['results'][i]['id'] + "'"
             result = "'" + responce['results'][i]['additional_info'] + "'"
             update_query = '''update {table} set "gisscos_id" = {gis_id}, "status" = 'equal', 
-                              "responce" = {result} where "external_id" = {external_id}'''.\
+                              "responce" = {result}, "date_sync" = NOW() where "external_id" = {external_id}'''.\
                 format(table=table, gis_id=gis_id, result=result, external_id=external_id)
+            print(update_query)
+            print('externaal_id: ', external_id, ', gis_id: ', gis_id, ', result: ', result)
             cursor.execute(update_query)
             connection.commit()
-    if query_type == 'compare' or query_type == 'put':
-       update_query = '''update student_status set "status" = '{}'
-                         where "external_id" = {} '''.format(status, external_id)
-
+    if query_type == 'error':
+        for i in range(len(responce['results'])):
+            external_id = "'" + responce['results'][i]['external_id'] + "'"
+            result = "'" + responce['results'][i]['additional_info'] + "'"
+            update_query = '''update {table} set "status" = 'error',
+                                            "responce" = {result},
+                                            "date_sync" = NOW()
+                         where "external_id" = {external_id} '''.\
+                format(table=table, result=result, external_id=external_id)
+            # print('externaal_id: ', external_id, ', gis_id: ', gis_id, ', result: ', result)
+            cursor.execute(update_query)
+            connection.commit()
 
 # получить ид
 def id_list(object, status=None, limit=None):
@@ -104,8 +119,10 @@ def send_to_gis(object):
 
         try:
             change_status(query_type='post', responce=responce, table=object_names[object])
+            "Статус изменен успешно"
         except Exception:
-            print("Ошибка в обновлении БД")
+            change_status(query_type='error', responce=responce, table=object_names[object])
+            "Статус изменен с ошибкой "
         """"""
     except Exception:
         print('(((')
@@ -116,7 +133,9 @@ try:
                                   host="192.168.25.103", port="5432", database="doubnsitest")
     cursor = connection.cursor()
     # print(send_to_gis(object='RootRegistryElement'))
-    print(send_to_gis(object='RootRegistryElement'))
+    # print(send_to_gis(object='EducationLevelHighSchool'))
+    print(make_dict(object='EppWorkPlan'))
+    print(send_to_gis(object='EppWorkPlan'))
 except (Exception, Error) as error:
     print("Ошибка при работе с PostgreSQL", error)
 finally:
