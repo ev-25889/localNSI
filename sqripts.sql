@@ -1,3 +1,52 @@
+-- Создание таблиц
+CREATE TABLE public.disciplines (
+	external_id varchar(50) NOT NULL,
+	title varchar NOT NULL,
+	status varchar(10) NULL DEFAULT 'new'::character varying,
+	date_sync timestamp NULL DEFAULT now(),
+	responce varchar NULL,
+	gisscos_id varchar NULL,
+	CONSTRAINT discipline_pkey PRIMARY KEY (external_id)
+);
+
+CREATE TABLE public.educational_programs (
+	external_id varchar NOT NULL,
+	title varchar NOT NULL,
+	direction varchar NULL,
+	code_direction varchar NULL,
+	start_year varchar NULL,
+	end_year varchar NULL,
+	direction_id varchar NOT NULL,
+	status varchar NULL DEFAULT 'new'::character varying,
+	responce varchar NULL,
+	date_sync timestamp NULL DEFAULT now(),
+	gisscos_id varchar NULL,
+	CONSTRAINT eduprogram_pkey PRIMARY KEY (external_id)
+);
+
+CREATE TABLE public.study_plans (
+	external_id varchar(50) NOT NULL,
+	title varchar NOT NULL,
+	direction varchar NULL,
+	code_direction varchar NULL,
+	start_year varchar NULL,
+	end_year varchar NULL,
+	education_form varchar NULL,
+	educational_program varchar NULL,
+	status varchar NULL DEFAULT 'new'::character varying,
+	date_sync timestamp NULL DEFAULT now(),
+	responce varchar NULL,
+	direction_name varchar NULL,
+	CONSTRAINT study_plans_pkey PRIMARY KEY (external_id)
+);
+
+CREATE TABLE public.subject (
+	id varchar NOT NULL,
+	direction varchar NULL,
+	code_direction varchar NULL,
+	CONSTRAINT subject_pkey PRIMARY KEY (id)
+);
+
 --Фукция, которая обновляет таблицу study_plans в соответствии с нужным форматом для отправки в ГИС, вызывается при
 CREATE OR REPLACE FUNCTION public.update_study_plans()           -- срабатывании триггеров check_insert и check_update
 	RETURNS trigger
