@@ -13,7 +13,7 @@ object_names = {'RootRegistryElement' : 'disciplines',
                 'EducationLevelHighSchool' : 'educational_programs',
                 'EppWorkPlan' : 'study_plans',
                 'EppWorkPlanBase' : 'study_plans'}
-def change_status(query_type, table, responce=None, external_id=None, status=None):
+def change_status(query_type, table, responce=None, external_id=None, status=None, number=None):
     """
     Метод изменяет статус записи  в заввисимости от действия (обновление, добавление... (удаление?))
     Параметры: query_type:responce:
@@ -21,29 +21,29 @@ def change_status(query_type, table, responce=None, external_id=None, status=Non
     update_query = ''
     if query_type == 'post':
         print(len(responce['results']))
-        for i in range(len(responce['results'])):
-            external_id = "'" + responce['results'][i]['external_id'] + "'"
-            gis_id = "'" + responce['results'][i]['id'] + "'"
-            result = "'" + responce['results'][i]['additional_info'] + "'"
-            update_query = '''update {table} set "gisscos_id" = {gis_id}, "status" = 'equal', 
-                              "responce" = {result}, "date_sync" = NOW() where "external_id" = {external_id}'''.\
-                format(table=table, gis_id=gis_id, result=result, external_id=external_id)
-            print(update_query)
-            print('externaal_id: ', external_id, ', gis_id: ', gis_id, ', result: ', result)
-            cursor.execute(update_query)
-            connection.commit()
+        # for i in range(len(responce['results'])):
+        external_id = "'" + responce['results'][number]['external_id'] + "'"
+        gis_id = "'" + responce['results'][number]['id'] + "'"
+        result = "'" + responce['results'][number]['additional_info'] + "'"
+        update_query = '''update {table} set "gisscos_id" = {gis_id}, "status" = 'equal', 
+                          "responce" = {result}, "date_sync" = NOW() where "external_id" = {external_id}'''.\
+            format(table=table, gis_id=gis_id, result=result, external_id=external_id)
+        print(update_query)
+        print('externaal_id: ', external_id, ', gis_id: ', gis_id, ', result: ', result)
+        cursor.execute(update_query)
+        connection.commit()
+
     if query_type == 'error':
-        for i in range(len(responce['results'])):
-            external_id = "'" + responce['results'][i]['external_id'] + "'"
-            result = "'" + responce['results'][i]['additional_info'] + "'"
-            update_query = '''update {table} set "status" = 'error',
-                                            "responce" = {result},
-                                            "date_sync" = NOW()
-                         where "external_id" = {external_id} '''.\
-                format(table=table, result=result, external_id=external_id)
-            # print('externaal_id: ', external_id, ', gis_id: ', gis_id, ', result: ', result)
-            cursor.execute(update_query)
-            connection.commit()
+        external_id = "'" + responce['results'][number]['external_id'] + "'"
+        result = "'" + responce['results'][number]['additional_info'] + "'"
+        update_query = '''update {table} set "status" = 'error',
+                                        "responce" = {result},
+                                        "date_sync" = NOW()
+                     where "external_id" = {external_id} '''.\
+            format(table=table, result=result, external_id=external_id)
+        # print('externaal_id: ', external_id, ', gis_id: ', gis_id, ', result: ', result)
+        cursor.execute(update_query)
+        connection.commit()
 
 # получить ид
 def id_list(object, status=None, limit=None):
@@ -116,14 +116,16 @@ def send_to_gis(object):
         responce = responce.json()
         print(responce)
         print("Запрос в гИС отправился")
+        for i in range(len(responce['results'])):
 
-        try:
-            change_status(query_type='post', responce=responce, table=object_names[object])
-            "Статус изменен успешно"
-        except Exception:
-            change_status(query_type='error', responce=responce, table=object_names[object])
-            "Статус изменен с ошибкой "
-        """"""
+            try:
+                change_status(query_type='post', responce=responce, table=object_names[object], number=i)
+                "Статус изменен успешно"
+            except Exception:
+
+                change_status(query_type='error', responce=responce, table=object_names[object], number=i)
+                "Статус изменен с ошибкой "
+            """"""
     except Exception:
         print('(((')
 
@@ -134,8 +136,8 @@ try:
     cursor = connection.cursor()
     # print(send_to_gis(object='RootRegistryElement'))
     # print(send_to_gis(object='EducationLevelHighSchool'))
-    print(make_dict(object='EppWorkPlan'))
-    print(send_to_gis(object='EppWorkPlan'))
+    print(make_dict(object='EducationLevelHighSchool'))
+    print(send_to_gis(object='EducationLevelHighSchool'))
 except (Exception, Error) as error:
     print("Ошибка при работе с PostgreSQL", error)
 finally:
