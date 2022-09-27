@@ -50,7 +50,7 @@ from generallib import get_xmlfile_from_dir
 from generallib import projectConfig
 from generallib import FileHasInvalidData
 
-# from dekanatapi import Dekanat
+#from dekanatapi import Dekanat
 from postgres import TandemDB
 from nsiclient import NSI
 
@@ -912,14 +912,12 @@ class RootRegistryElement(Base, Nsiconvert):
 
 
 class EducationLevelsHighSchool(Base, Nsiconvert):
-    __tablename__ = 'educational_programs'
+    __tablename__ = 'educational_programs_subject'
 
     ID = Column(String, primary_key=True, name='external_id')
     EducationLevelsHighSchoolName = Column(String, name='title')
     SubjectID = Column(String, name='direction_id')
-    EducationLevelsHighSchoolOpenDate = Column(String, name='start_year')
-    EducationLevelsHighSchoolCloseDate = Column(String, name='end_year')
-    Status = Column(String, name='status', default='new')
+
 
     def __init__(self, a):
         Base.__init__(self)
@@ -938,6 +936,29 @@ class EducationLevelsHighSchool(Base, Nsiconvert):
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
                 self.ID, a.ID))
 
+class EducationalProgram(Base, Nsiconvert):
+    __tablename__ = 'educational_programs'
+
+    ID = Column(String, primary_key=True, name='external_id')
+    EducationalProgramName = Column(String, name='title')
+    EducationLevelsHighSchoolID = Column(String, name='educational_program_id')
+
+    def __init__(self, a):
+        Base.__init__(self)
+        fields = {
+            'EducationLevelsHighSchoolID': 'EducationLevelsHighSchool',
+        }
+        self.init_from_dict(a, fields)
+
+    def to_dict(self):
+        return self.to_dict_base({})
+
+    def update(self, a):
+        if self.ID == a.ID:
+            self.base_update(a)
+        else:
+            logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
+                self.ID, a.ID))
 
 class EduProgramSubject(Base, Nsiconvert):
     __tablename__ = 'subject'
@@ -961,17 +982,34 @@ class EduProgramSubject(Base, Nsiconvert):
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
                 self.ID, a.ID))
 
-"""
-class EppWorkPlanBase(Base, Nsiconvert):
-    __tablename__ = 'studyplan'
 
-    ID = Column(String, primary_key=True)
-    EppWorkPlanBaseName = Column(String)
-    EppWorkPlanBase
+class EduPlanVersion(Base, Nsiconvert):
+    __tablename__ = 'study_plans'
 
-class EppEduPlan(Base, Nsiconvert):
-    __tablename__ = 'eduplan'
-"""
+    ID = Column(String, primary_key=True, name='external_id')
+    EduPlanVersionName = Column(String, name='title')
+    EduPlanVersionProgramSubjectName = Column(String, name='direction_name')
+    EduPlanVersionProgramSubjectOKSO = Column(String, name='code_direction')
+    EduPlanVersionYearsStr = Column(String, name='period_year')
+    EduPlanVersionProgramFormName = Column(String, name='education_form')
+
+    def __init__(self, a):
+        Base.__init__(self)
+        self.init_from_dict(a, {})
+
+    def to_dict(self):
+        return self.to_dict_base({})
+
+    def update(self, a):
+        if self.ID == a.ID:
+            self.base_update(a)
+        else:
+            logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
+                self.ID, a.ID))
+
+
+
+
 
 class DoublerNSI():
     """Основной класс работы с базой Локального НСИ
