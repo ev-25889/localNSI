@@ -1,3 +1,138 @@
+--STUDENT_STATUS
+CREATE TABLE public.student_status (
+	id serial4 NOT NULL,
+	external_id varchar(50) NOT NULL,
+	gisscos_id varchar(50) NULL,
+	status varchar(50) NOT NULL DEFAULT 'new'::character varying,
+	datesynq timestamp NULL,
+	responce text NULL,
+	CONSTRAINT student_status_pkey PRIMARY KEY (id)
+);
+
+CREATE OR REPLACE FUNCTION public.update_student_status_from_student()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    mstr varchar(30);
+    astr varchar(100);
+    retstr varchar(254);
+BEGIN
+    IF TG_OP = 'UPDATE' THEN
+		UPDATE student_status set "status" = 'to_del' WHERE student_status."external_id" =
+		new."ID";
+        RETURN NEW;
+    END IF;
+    IF TG_OP = 'DELETE' THEN
+		UPDATE student_status set "status" = 'to_del' WHERE student_status."external_id" =
+		old."ID";
+        RETURN OLD;
+    END IF;
+END;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.add_to_student_status()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    --mstr varchar(30);
+    astr varchar(100);
+    --retstr varchar(254);
+BEGIN
+    IF  TG_OP = 'INSERT'  or TG_OP = 'UPDATE' THEN
+        astr = NEW."ID";
+        --if		new."StudentStatusID" in ('8462edfe-55e3-4d64-b3d5-8933e9c82bed','d9d450b4-184e-4738-8710-25c53fed6263',
+--'06365216-0c9b-4352-a80c-89a2bf8a3424', '450519a5-4a4a-477d-b1e4-4f7daf310065') then
+		INSERT INTO student_status(id, external_id) values (nextval('serial'), astr);
+		--end if;
+        RETURN NEW;
+    END IF;
+   return new;
+END;
+$function$
+;
+
+create trigger check_insert_student after
+insert
+    on
+    public.student for each row
+    when (((new."StudentStatusID")::text = any (array['8462edfe-55e3-4d64-b3d5-8933e9c82bed'::text,
+    'd9d450b4-184e-4738-8710-25c53fed6263'::text,
+    '06365216-0c9b-4352-a80c-89a2bf8a3424'::text,
+    '450519a5-4a4a-477d-b1e4-4f7daf310065'::text]))) execute procedure add_to_student_status();
+
+
+create trigger check_delete_student after
+delete
+    on
+    public.student for each row execute procedure update_student_status_from_student();
+
+create trigger check_update_student_to_add after
+update
+    on
+    public.student for each row
+    when ((((new."StudentStatusID")::text = any (array['8462edfe-55e3-4d64-b3d5-8933e9c82bed'::text,
+    'd9d450b4-184e-4738-8710-25c53fed6263'::text,
+    '06365216-0c9b-4352-a80c-89a2bf8a3424'::text,
+    '450519a5-4a4a-477d-b1e4-4f7daf310065'::text]))
+        and ((old."StudentStatusID")::text <> all (array['8462edfe-55e3-4d64-b3d5-8933e9c82bed'::text,
+        'd9d450b4-184e-4738-8710-25c53fed6263'::text,
+        '06365216-0c9b-4352-a80c-89a2bf8a3424'::text,
+        '450519a5-4a4a-477d-b1e4-4f7daf310065'::text])))) execute procedure add_to_student_status();
+
+create trigger check_update_student_to_update after
+update
+    on
+    public.student for each row
+    when (((new."StudentStatusID")::text <> all (array['8462edfe-55e3-4d64-b3d5-8933e9c82bed'::text,
+    'd9d450b4-184e-4738-8710-25c53fed6263'::text,
+    '06365216-0c9b-4352-a80c-89a2bf8a3424'::text,
+    '450519a5-4a4a-477d-b1e4-4f7daf310065'::text]))) execute procedure update_student_status_from_student();
+
+CREATE OR REPLACE FUNCTION public.update_student_status_from_human()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    var varchar;
+BEGIN
+    IF TG_OP = 'UPDATE' then
+    	var = (SELECT student."ID" from student where "HumanID" = new."ID");
+		UPDATE student_status set "status" = 'new', "responce" = 'Обновлено в human'
+		WHERE student_status."external_id" = var;
+		--(SELECT student."ID" from student where "HumanID" = new."ID");
+        RETURN NEW;
+    END IF;
+END;
+$function$
+;
+
+create trigger check_update_human after
+update
+    on
+    public.human for each row
+    when ((((old."HumanFirstName")::text is distinct
+from
+    (new."HumanFirstName")::text)
+        or ((old."HumanINN")::text is distinct
+    from
+        (new."HumanINN")::text)
+            or ((old."HumanLastName")::text is distinct
+        from
+            (new."HumanLastName")::text)
+                or ((old."HumanMiddleName")::text is distinct
+            from
+                (new."HumanMiddleName")::text)
+                    or ((old."HumanSNILS")::text is distinct
+                from
+                    (new."HumanSNILS")::text))) execute procedure update_student_status_from_human()
+_________________________________________________________________________________________________________________________
+
+
+
+
 -- Создание таблиц
 CREATE TABLE public.disciplines (
 	external_id varchar(50) NOT NULL,
@@ -9,19 +144,22 @@ CREATE TABLE public.disciplines (
 	CONSTRAINT discipline_pkey PRIMARY KEY (external_id)
 );
 
+alter table educational_programs rename to educational_programs_subject;
+alter table educational_programs_subject drop column status;
+alter table educational_programs_subject drop column responce;
+alter table educational_programs_subject drop column date_sync;
+alter table educational_programs_subject drop column gisscos_id;
+alter table educational_programs_subject drop column start_year;
+alter table educational_programs_subject drop column end_year;
 CREATE TABLE public.educational_programs (
 	external_id varchar NOT NULL,
-	title varchar NOT NULL,
-	direction varchar NULL,
-	code_direction varchar NULL,
-	start_year varchar NULL,
-	end_year varchar NULL,
-	direction_id varchar NOT NULL,
+	title varchar NULL,
+	educational_program_id varchar NULL,
 	status varchar NULL DEFAULT 'new'::character varying,
 	responce varchar NULL,
 	date_sync timestamp NULL DEFAULT now(),
 	gisscos_id varchar NULL,
-	CONSTRAINT eduprogram_pkey PRIMARY KEY (external_id)
+	CONSTRAINT educational_programs_version_pkey PRIMARY KEY (external_id)
 );
 
 CREATE TABLE public.study_plans (
@@ -147,12 +285,8 @@ vend_year varchar;
 			vstart_year = new."start_year";
 			vend_year = new."end_year";
 			update educational_programs set "direction" = (select direction from subject s where s.id = educational_programs.direction_id),
-											"code_direction" = (select code_direction from subject s where s.id = educational_programs.direction_id),
-								  			"start_year" = substring(vstart_year from 1 for 4),
-								  			"end_year" = substring(vend_year from 1 for 4),
-											"status" = 'new',
-											"date_sync" = NOW(),
-											"responce" = 'Обновлено/добавлено из Тандема'
+											"code_direction" = (select code_direction from subject s where s.id = educational_programs.direction_id)
+
 			where "external_id" = id;
 			return new;
 		end if;
@@ -171,18 +305,13 @@ create trigger check_update after
 update
     on
     public.educational_programs for each row
-    when ((((old.title)::text is distinct
+    when (((old.title)::text is distinct
 from
     (new.title)::text)
         or ((old.direction_id)::text is distinct
     from
         (new.direction_id)::text)
-            or ((old.start_year)::text is distinct
-        from
-            (new.start_year)::text)
-                or ((old.end_year)::text is distinct
-            from
-                (new.end_year)::text))) execute procedure update_educational_programs()
+    ) execute procedure update_educational_programs()
 
 -- Функция, обновляющая таблицу disciplines в соответствии с нужным форматом для отправки в ГИС, вызывается
 CREATE OR REPLACE FUNCTION public.update_disciplines()              -- при срабатывании триггеров check_insert
