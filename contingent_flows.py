@@ -135,7 +135,7 @@ def get_flow_name(code_pr):
     return flow_name
 
 
-def get_flow(guid_st):
+def get_flow(guid_st, guid_order):
     """"
     метод получает движение контингента по студенту
     Параметры:
@@ -155,10 +155,26 @@ def get_flow(guid_st):
     # Зачисление ПК
 
     cur1 = connection.cursor()
-    sql1 = """SELECT r.guid_p,pt.title_p,p.number_p,p.commitDate_p,i.shorttitle_p,df.title_p,fin.title_p,pt.code_p,i2.shorttitle_p FROM enr14_order_extract_abs_t  a inner join  enr14_order_enr_extract_t s on a.id=s.id inner join personrole_t r on s.student_id=r.id inner join  enr14_order_par_abs_t ap on a.paragraph_id=ap.id 
-    inner join   enr14_order_enr_par_t ep on a.paragraph_id=ep.id  inner join developform_t df on ep.developForm_id=df.id inner join  enr14_c_comp_type_t fin on ep.competitionType_id=fin.id 
-    inner join enr14_order_abs_t p  on   ap.order_id=p.id inner join  enr14_order_t pp on ap.order_id = pp.id  inner join enr14_c_order_type_t pt on pp.type_id=pt.id inner join orgunit_t i on ep.formativeOrgUnit_id=i.id left join enr14_requested_comp_t k on s.entity_id=k.id  left join  enr_requested_program_t vk on k.id=vk.requestedcompetition_id  left join enr14_program_set_item_t ps on vk.programSetItem_id=ps.id left  join educationorgunit_t edu on ps.educationOrgUnit_id=edu.id left join orgunit_t i2 on  edu.formativeOrgUnit_id=i2.id
-    where p.state_id =1594713222843617009 and k.state_id=1594713222153652315 and r.guid_p like '""" + str(guid_st) + """'"""
+    sql1 = """SELECT r.guid_p,pt.title_p,p.number_p,p.commitDate_p,i.shorttitle_p,df.title_p,fin.title_p,pt.code_p,i2.shorttitle_p 
+                 FROM enr14_order_extract_abs_t  a 
+                    inner join  enr14_order_enr_extract_t s on a.id=s.id 
+                    inner join personrole_t r on s.student_id=r.id 
+                    inner join  enr14_order_par_abs_t ap on a.paragraph_id=ap.id 
+                    inner join   enr14_order_enr_par_t ep on a.paragraph_id=ep.id  
+                    inner join developform_t df on ep.developForm_id=df.id 
+                    inner join  enr14_c_comp_type_t fin on ep.competitionType_id=fin.id 
+                    inner join enr14_order_abs_t p  on   ap.order_id=p.id 
+                    inner join  enr14_order_t pp on ap.order_id = pp.id  
+                    inner join enr14_c_order_type_t pt on pp.type_id=pt.id 
+                    inner join orgunit_t i on ep.formativeOrgUnit_id=i.id 
+                    left join enr14_requested_comp_t k on s.entity_id=k.id  
+                    left join  enr_requested_program_t vk on k.id=vk.requestedcompetition_id  
+                    left join enr14_program_set_item_t ps on vk.programSetItem_id=ps.id 
+                    left  join educationorgunit_t edu on ps.educationOrgUnit_id=edu.id 
+                    left join orgunit_t i2 on  edu.formativeOrgUnit_id=i2.id
+                 where p.state_id =1594713222843617009 
+                 and k.state_id=1594713222153652315 
+                 and r.guid_p like '""" + str(guid_st) + """'"""
 
     cur1.execute(sql1)
     recordP = cur1.fetchone()
@@ -198,10 +214,21 @@ def get_flow(guid_st):
 
     # приказы по студенту
     cur2 = connection.cursor()
-    sql2 = """SELECT r.guid_p,pt.title_p,p.number_p,p.commitDate_p,i.shorttitle_p,s.developFormStr_p,s.compensationTypeStr_p,pt.code_p,fo2.title_p,fin2.title_p,s.formativeOrgUnitStr_p,pt.title_p FROM abstractstudentextract_t s inner join personrole_t r on s.entity_id=r.id inner join  abstractstudentparagraph_t  ap on s.paragraph_id = ap.id 
-    inner join abstractstudentorder_t p on    ap.order_id=p.id inner join  baseextracttype_t pt on s.type_id = pt.id left join orgunit_t i on p.orgunit_id= i.id  left join commonStuExtract_t dop on  s.id=dop.id left join educationorgunit_t op2 on  dop.educationOrgUnitNew_id=op2.id left join developform_t fo2 on op2.developform_id=fo2.id 
-    left join  compensationtype_t fin2 on dop.compensationTypeNew_id=fin2.id
-    where p.state_id =1594713222843617009 and r.guid_p like '""" + str(guid_st) + """'  order by p.commitDate_p """
+    sql2 = """SELECT r.guid_p,pt.title_p,p.number_p,p.commitDate_p,i.shorttitle_p,s.developFormStr_p,
+                     s.compensationTypeStr_p,pt.code_p,fo2.title_p,fin2.title_p,s.formativeOrgUnitStr_p,pt.title_p 
+              FROM abstractstudentextract_t s 
+                inner join personrole_t r on s.entity_id=r.id 
+                inner join  abstractstudentparagraph_t  ap on s.paragraph_id = ap.id 
+                inner join abstractstudentorder_t p on    ap.order_id=p.id 
+                inner join  baseextracttype_t pt on s.type_id = pt.id 
+                left join orgunit_t i on p.orgunit_id= i.id  
+                left join commonStuExtract_t dop on  s.id=dop.id 
+                left join educationorgunit_t op2 on  dop.educationOrgUnitNew_id=op2.id 
+                left join developform_t fo2 on op2.developform_id=fo2.id 
+                left join  compensationtype_t fin2 on dop.compensationTypeNew_id=fin2.id
+              where p.state_id =1594713222843617009 
+              and s.guid_p like '""" + str(guid_order) + """' 
+              and r.guid_p like '""" + str(guid_st) + """'  order by p.commitDate_p """
 
     cur2.execute(sql2)
     recordP2 = cur2.fetchall()
@@ -238,6 +265,7 @@ def get_flow(guid_st):
             fin_old = dan_flow['fin_form']
     return dan_flow
 
+# Этот метод уже не нужен, потому что в таблице contingent_flows_status только нужные типы приказов.
 def choose_flows_for_gis(guid_st):
     flow = get_flow(guid_st=guid_st)
     if flow['flow_type'] in ('ENROLLMENT', 'DEDUCTION', 'TRANSFER', 'REINSTATEMENT','SABBATICAL_TAKING'):
@@ -253,15 +281,41 @@ def get_from_testdb():
     recordP = cur3.fetchone()
     print(recordP)
 
-def get_students_id():
-    select_query = """select external_id from contingent_flows_status where status = 'new'"""
+
+#  функция возвращает ид студента из таблицы contingent_flows_status со статусом new
+def get_id(field):
+    select_query = """select {field} from contingent_flows_status where status = 'new' limit(1)""".format(field=field)
     cursor2.execute(select_query)
     selection = cursor2.fetchone()
     if type(selection[0]) == str:
-        id_param = "'" + str(selection[0]) + "'"
+        id_param = selection[0]
+        # id_param = "'" + str(selection[0]) + "'"
         return id_param  # тип параметра - строка
     else:
-        return print("Нет таких студентов в таблице.")
+        return print("Нет таких {field} в таблице.".format(field=field))
+
+def fill_table():
+    guid_st = get_id(field='student')
+    guid_order = get_id(field='external_id')
+    info = get_flow(guid_st=guid_st, guid_order=guid_order)
+    print(info)
+    print(info['continget_flow'])
+    update_query = """update contingent_flows_status set continget_flow = '{continget_flow}', 
+                                                         flow_type = {flow_type}, 
+                                                         date = {date}, 
+                                                         faculty = {faculty},
+                                                         education_form = {education_form}, 
+                                                         form_fin = {fin_form}, 
+                                                         details = {details}, 
+                                                         status = 'readyToSend', 
+                                                         date_sync = NOW(), 
+                                                         response = 'come from LDNSI'
+                      where external_id = guid_order""".format\
+        (continget_flow=info['continget_flow'], flow_type=info['flow_type'], date=info['date'], faculty=info['faculty'],
+         education_form=info['education_form'], fin_form=info['fin_form'], details=['details'])
+
+    cursor2.execute(update_query)
+    connection2.commit()
 
 try:
   # Подключение к базе данных
@@ -278,9 +332,8 @@ try:
                                 database="doubnsitest")
   cursor = connection.cursor()
   cursor2 = connection2.cursor()
-  print(get_students_id())
-  print(choose_flows_for_gis(guid_st='762927f2-d172-4eeb-b216-f5a08f338c57'))
-  print(get_from_testdb())
+  # print(get_flow(get_id(field='student'), get_id(field='external_id')))
+  print(fill_table())
 
 except (Exception, Error) as error:
   print("Ошибка при работе с PostgreSQL", error)
