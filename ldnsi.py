@@ -147,55 +147,6 @@ class Nsiconvert():
             res.update(it)
         return res
 
-    def to_dict_base_with_check(self, flds):
-        """Отличается от to_dict_base проверкой поля ExtractTypeID в документе StudentOrderExtract
-        в бд будут добавляться только определенные объекты, интересующие ГИС СЦОС
-        """
-        res = dict()
-        # print(self.__dict__)
-        # Пробегаем по всем атрибутам экземпляра класса
-        for fld in self.__dict__:
-            logging.info("fld:", fld)
-            if fld in ['_sa_instance_state', 'flds']:
-                continue
-            # и если они не  ['_sa_instance_state','flds']
-            # то  заносим их в dict
-            try:
-                # Читаем значение атрибута преобразуя его к строке
-                # либо None
-                if self.__dict__[fld] is None:
-                    v = None
-                else:
-                    v = str(self.__dict__[fld])
-                # Проверяем являеться ли атрибут особым.
-                # Особые атрибуты предаются в метод в параметре flds
-                if fld in flds.keys():
-                    # Если значение атрибута пусто, вид словаря
-                    # схлопывается до простого представления(так в НСИ)
-                    if v is None:
-                        it = {
-                            fld: v
-                        }
-                    else:
-                        # Особый случай для специальных атрибутов
-                        it = {
-                            fld: {
-                                flds[fld]: {
-                                    'ID': v
-                                }
-                            }
-                        }
-                else:
-                    # Все не специальные атрибуты имеют простое
-                    # представлние в виде словаря
-                    it = {
-                        fld: v
-                    }
-            except AttributeError as e:
-                logging.error('not found fields ' + str(self.__dict__))
-                raise e
-            res.update(it)
-        return res
     def base_update(self,a):
         """Метод обновляет поля класса по словарю
 
@@ -1493,10 +1444,12 @@ class DoublerNSI():
                                       '2ab6db5a-f259-47a0-8398-7c62805ef1cf', 'd1e12e40-8e4d-485e-8b28-bfffee1ad3d1',
                                       '6656ab39-f97e-4633-a466-74fd4c1d0141', 'acf5d3b1-06bd-43e1-8e1f-5514d8cd605f',
                                       '98564702-db9c-4c61-808b-f8681a818b76', '7e12e8e0-c59f-43df-bd61-7e2517872521'):
-                print('Это приказ о заачислении')
+                msg = 'righ type'
+                logging.debug(msg)
                 return obj
             else:
-                print('Это приказ не о заачислении')
+                msg = 'wrong type'
+                logging.debug(msg)
                 return None
         return obj
 
@@ -1602,7 +1555,7 @@ class DoublerNSI():
                 except NoResultFound:
                     # для нового объекта запускаем событие
                     # смотрим нужно ли что то делать с новым объектом
-                    print('print _process_pacage NoResultFound: ',self._event_new_object(obj))
+                    # print('print _process_pacage NoResultFound: ',self._event_new_object(obj))
                     obj = self._event_new_object(obj) 
                     session.add(obj)
                     continue
@@ -1712,14 +1665,14 @@ class DoublerNSI():
                 text =  bytes(bytearray(prev) + bytearray(text))
                 prev = bytes('',encoding='utf-8')
             for i in self.pars_to_obj(text,b_tag,end_tag,cls_name,tag_name):
-                print('print add1: ', self.add(i))
-                print('print i: ', i, type(i))
+                self.add(i)
+                # print('print i: ', i, type(i))
                 count += 1
             k +=1
         ind = k*size_in_bytes-len(prev)
         for i in self.pars_to_obj(prev,b_tag,end_tag,cls_name,tag_name):
-            print('print add2: ', self.add(i))
-            print('print i 2: ', i, type(i))
+            self.add(i)
+            # print('print i 2: ', i, type(i))
             count += 1
         # Удаляем файл.
         f.close()
@@ -1737,9 +1690,9 @@ class DoublerNSI():
             if len(self.wp)>0:
                 w = self.wp+text[:i-1]
                 self.wp = ''
-                print('print pars_to_obj w_decode: ', w.decode(encoding='utf-8'))
+                # print('print pars_to_obj w_decode: ', w.decode(encoding='utf-8'))
                 res = xmltodict.parse(w.decode(encoding='utf-8'))
-                print('print pars_to_obj res: ', res)
+                # print('print pars_to_obj res: ', res)
                 obj = cls_name(dict(res[tag_name]))
                 text = text[i:]
                 yield obj
@@ -1761,7 +1714,7 @@ class DoublerNSI():
             
             res = xmltodict.parse(w.decode(encoding='utf-8'))
             obj = cls_name(dict(res[tag_name]))
-            print('print parse_to_obj obj: ', obj)
+            # print('print parse_to_obj obj: ', obj)
             yield obj
 
     
@@ -1769,12 +1722,14 @@ class DoublerNSI():
         session = self.Session()
         try:
             q = session.query(obj.__class__).filter_by(ID=obj.ID).one()
-            print('print add try: ')
+            #logging.debug('studentOrderExtract dose not find in contingent_flows_status')
+            # print('print add try: ')
         except NoResultFound:
             # для нового объекта запускаем событие
             # смотрим нужно ли что то делать с новым объектом
-            print('add, _event_new_object: ', self._event_new_object(obj))
-            # obj = self._event_new_object(obj)
+            # print('add, _event_new_object: ', self._event_new_object(obj))
+            #logging.debug('studentOrderExtract is found in contingent_flows_status')
+            obj = self._event_new_object(obj)
             if self._event_new_object(obj) is not None:
                 session.add(obj)
                 session.commit()
@@ -1844,7 +1799,7 @@ if __name__=='__main__':
 
     format_str='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(filename=generate_logfile_name('nsiSync',
-       period='day'),filemode='a',format=format_str,level=dmm)
+       period='day'),filemode='a',format=format_str,level=logging.DEBUG)      # меняю level=dmm на level=logging.DEBUG
 
     logging.info('start script ldnsi')
     try:
@@ -1869,6 +1824,7 @@ if __name__=='__main__':
 
             logging.info('Droping all tables in database.')
         dnsi = DoublerNSI(conf,nsiconf,tandemcfg,drop_all=args.drop)
+
         while True:
             f_name = get_xmlfile_from_dir(input_dir)
             
@@ -1878,8 +1834,7 @@ if __name__=='__main__':
             msg = "find xml file %s to process"%(f_name,)
             logging.debug(msg)
             logging.debug('begin process')
-            print('print __main__ update_from_xml: ', dnsi.update_from_xml(f_name,input_dir))
-            #print(dnsi.update_from_xml(f_name, input_dir))
+            dnsi.update_from_xml(f_name, input_dir)
             logging.debug("end process of file %s"%(f_name,))
 
 
