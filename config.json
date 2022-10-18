@@ -1,10 +1,10 @@
 {
   "sql": {
-    "server": "localhost",
+    "server": "192.168.25.103",
     "port": "5432",
-    "database": "myproject",
-    "user": "myprojectuser",
-    "password": "password",
+    "database": "doubnsitest",
+    "user": "donsitest",
+    "password": "TS4d#dkpf3WE1",
     "server_type": "postgresql"
   },
   "sql2":{
