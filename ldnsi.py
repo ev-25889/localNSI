@@ -147,6 +147,55 @@ class Nsiconvert():
             res.update(it)
         return res
 
+    def to_dict_base_with_check(self, flds):
+        """Отличается от to_dict_base проверкой поля ExtractTypeID в документе StudentOrderExtract
+        в бд будут добавляться только определенные объекты, интересующие ГИС СЦОС
+        """
+        res = dict()
+        # print(self.__dict__)
+        # Пробегаем по всем атрибутам экземпляра класса
+        for fld in self.__dict__:
+            logging.info("fld:", fld)
+            if fld in ['_sa_instance_state', 'flds']:
+                continue
+            # и если они не  ['_sa_instance_state','flds']
+            # то  заносим их в dict
+            try:
+                # Читаем значение атрибута преобразуя его к строке
+                # либо None
+                if self.__dict__[fld] is None:
+                    v = None
+                else:
+                    v = str(self.__dict__[fld])
+                # Проверяем являеться ли атрибут особым.
+                # Особые атрибуты предаются в метод в параметре flds
+                if fld in flds.keys():
+                    # Если значение атрибута пусто, вид словаря
+                    # схлопывается до простого представления(так в НСИ)
+                    if v is None:
+                        it = {
+                            fld: v
+                        }
+                    else:
+                        # Особый случай для специальных атрибутов
+                        it = {
+                            fld: {
+                                flds[fld]: {
+                                    'ID': v
+                                }
+                            }
+                        }
+                else:
+                    # Все не специальные атрибуты имеют простое
+                    # представлние в виде словаря
+                    it = {
+                        fld: v
+                    }
+            except AttributeError as e:
+                logging.error('not found fields ' + str(self.__dict__))
+                raise e
+            res.update(it)
+        return res
     def base_update(self,a):
         """Метод обновляет поля класса по словарю
 
@@ -161,6 +210,7 @@ class Nsiconvert():
                 continue
             w = getattr(a,fld)
             setattr(self,fld,w)
+
 
 class DiplomUpdateStatus(Base):
     __tablename__ = 'diplomupdatestatus'
@@ -184,7 +234,7 @@ class ServiceRequest(Base):
     datagram=Column(String)
     callCC = Column(Integer)
     callRC = Column(String)
-
+"""
 class EnrEntrant(Base,Nsiconvert):
     __tablename__ = 'enrentrant'
     ID = Column(String,primary_key=True)
@@ -756,7 +806,7 @@ class Human(Base,Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
-
+"""
 class AcademicGroup(Base,Nsiconvert):
     __tablename__ = 'academicgroup'
     ID = Column(String,primary_key=True)
@@ -804,7 +854,7 @@ class AcademicGroup(Base,Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
-
+"""
 class Employee(Base,Nsiconvert):
     __tablename__ = 'employee'
     ID = Column(String,primary_key=True)
@@ -883,7 +933,7 @@ class Principal(Base,Nsiconvert):
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
 
-
+"""
 # начинаем самодеятельность
 class RootRegistryElement(Base, Nsiconvert):
     __tablename__ = 'disciplines'
@@ -1008,6 +1058,37 @@ class EduPlanVersion(Base, Nsiconvert):
                 self.ID, a.ID))
 
 
+class StudentOrderExtract(Base, Nsiconvert):
+    __tablename__ = 'contingent_flows_status'
+
+    ID = Column(String, name='external_id', primary_key=True)
+    StudentID = Column(String, name='student')
+    ExtractTypeID = Column(String, name='extract_type')
+    # Column(String, name='flow_type')
+    # StudentOrderExtractBeginDate = Column(DateTime, name='date')
+    # Column(String, name='faculty')  из таблицы студент - departmentID
+    # Column(String, name='education_form') из таблицы учебный план, но какая на нее сылка???
+    # Column(String, name='form_fin')   из таблицы студент - compensationType
+    # StudentOrderExtractComment = Column(String, name='details')
+
+    def __init__(self, a):
+        Base.__init__(self)
+        fields = {
+            'StudentID': 'Student',
+            'ExtractTypeID': 'StudentOrderType'
+
+        }
+        self.init_from_dict(a, fields)
+
+    def to_dict(self):
+        return self.to_dict_base_with_check({})
+
+    def update(self, a):
+        if self.ID == a.ID:
+            self.base_update(a)
+        else:
+            logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
+                self.ID, a.ID))
 
 
 
@@ -1405,7 +1486,24 @@ class DoublerNSI():
         if isinstance(obj,AcademicGroup):
             pass
 #            obj = self._event_new_academicgroup(obj)
+        if isinstance(obj, StudentOrderExtract):
+            # если объект принадлежит классу ПРИКАЗЫ, то надо проверить его поле ExtractTypeID на соответствие одному из
+        # ид , которые нас интересуют. После этого, либо пропускать объект, либо продолжать все по сценарию....
+            if obj.ExtractTypeID in  ('05ccbd7d-432b-4e2a-8f02-790414cf1cad', 'f1857f4a-0905-4c1a-8333-78cf5dc381a3',
+                                      '2ab6db5a-f259-47a0-8398-7c62805ef1cf', 'd1e12e40-8e4d-485e-8b28-bfffee1ad3d1',
+                                      '6656ab39-f97e-4633-a466-74fd4c1d0141', 'acf5d3b1-06bd-43e1-8e1f-5514d8cd605f',
+                                      '98564702-db9c-4c61-808b-f8681a818b76', '7e12e8e0-c59f-43df-bd61-7e2517872521'):
+                print('Это приказ о заачислении')
+                return obj
+            else:
+                print('Это приказ не о заачислении')
+                return None
         return obj
+
+    def check_order_type(self, obj):
+        # TODO: написать функцию, которая будет проверять значение в поле тип приказа на соответствие выбранным.
+    #  В случае, если тип соответствует, сохранять объект в базу. В случае, если не соответствует, пропускать и переходить  следующему.
+        pass
 
     def _process_package(self,package):
         """ Метод обрабатывает пакет из очереди
@@ -1443,6 +1541,7 @@ class DoublerNSI():
                 except NoResultFound:
                     # для нового объекта запускаем событие
                     # смотрим нужно ли что то делать с новым объектом
+                    print(self._event_new_object(obj))
                     obj = self._event_new_object(obj) 
                     newobjs.append(obj)
                     continue
@@ -1506,6 +1605,7 @@ class DoublerNSI():
                 except NoResultFound:
                     # для нового объекта запускаем событие
                     # смотрим нужно ли что то делать с новым объектом
+                    print('print _process_pacage NoResultFound: ',self._event_new_object(obj))
                     obj = self._event_new_object(obj) 
                     session.add(obj)
                     continue
@@ -1592,10 +1692,10 @@ class DoublerNSI():
         prev = bytes('',encoding='utf-8')
         count = 0
         f_read  = partial(f.read, size_in_bytes)
-        for text in iter(f_read, ''):
+        for text in iter(f_read, ''):                       # Создаем итератор для читаемого файла с размером
             if len(text)==0:
                 break
-            if not text.endswith(end_tag):
+            if not text.endswith(end_tag):                  # если строка не заканчивается закрывающимся тегом, то
                 # if file contains a partial line at the end, then don't
                 # use it when counting the substring count. 
                 rt = text.rsplit(end_tag, 1)
@@ -1615,12 +1715,14 @@ class DoublerNSI():
                 text =  bytes(bytearray(prev) + bytearray(text))
                 prev = bytes('',encoding='utf-8')
             for i in self.pars_to_obj(text,b_tag,end_tag,cls_name,tag_name):
-                self.add(i)
+                print('print add1: ', self.add(i))
+                print('print i: ', i, type(i))
                 count += 1
             k +=1
         ind = k*size_in_bytes-len(prev)
         for i in self.pars_to_obj(prev,b_tag,end_tag,cls_name,tag_name):
-            self.add(i)
+            print('print add2: ', self.add(i))
+            print('print i 2: ', i, type(i))
             count += 1
         # Удаляем файл.
         f.close()
@@ -1629,16 +1731,18 @@ class DoublerNSI():
             ' loaded:'+str(count)
         logging.info(msg)
 
-    def pars_to_obj(self,text,b_tag,end_tag,cls_name,tag_name):
+    def pars_to_obj(self,text,b_tag,end_tag,cls_name,tag_name):     # возвращает объект <__main__.StudentOrderExtract object at 0x000002327817C550>
         res = dict()
         # TODO: Исправить кривой код поиска нужных
         # объектов в тексте 
         while text.find(b_tag)!=-1:
-            i = text.find(b_tag)
+            i = text.find(b_tag)                # находим индекс открывающего тега
             if len(self.wp)>0:
                 w = self.wp+text[:i-1]
                 self.wp = ''
+                print('print pars_to_obj w_decode: ', w.decode(encoding='utf-8'))
                 res = xmltodict.parse(w.decode(encoding='utf-8'))
+                print('print pars_to_obj res: ', res)
                 obj = cls_name(dict(res[tag_name]))
                 text = text[i:]
                 yield obj
@@ -1660,6 +1764,7 @@ class DoublerNSI():
             
             res = xmltodict.parse(w.decode(encoding='utf-8'))
             obj = cls_name(dict(res[tag_name]))
+            print('print parse_to_obj obj: ', obj)
             yield obj
 
     
@@ -1667,12 +1772,17 @@ class DoublerNSI():
         session = self.Session()
         try:
             q = session.query(obj.__class__).filter_by(ID=obj.ID).one()
+            print('print add try: ')
         except NoResultFound:
             # для нового объекта запускаем событие
             # смотрим нужно ли что то делать с новым объектом
-            obj = self._event_new_object(obj) 
-            session.add(obj)
-            session.commit()
+            print('add, _event_new_object: ', self._event_new_object(obj))
+            # obj = self._event_new_object(obj)
+            if self._event_new_object(obj) is not None:
+                session.add(obj)
+                session.commit()
+            else:
+                print('Это приказ не о заачислении')
             return
         # если сущствует обновим.
         q.update(obj)
@@ -1771,7 +1881,8 @@ if __name__=='__main__':
             msg = "find xml file %s to process"%(f_name,)
             logging.debug(msg)
             logging.debug('begin process')
-            dnsi.update_from_xml(f_name,input_dir)
+            print('print __main__ update_from_xml: ', dnsi.update_from_xml(f_name,input_dir))
+            #print(dnsi.update_from_xml(f_name, input_dir))
             logging.debug("end process of file %s"%(f_name,))
 
 
