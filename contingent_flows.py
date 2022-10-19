@@ -299,20 +299,20 @@ def fill_table():
     guid_order = get_id(field='external_id')
     info = get_flow(guid_st=guid_st, guid_order=guid_order)
     print(info)
-    print(info['continget_flow'])
-    update_query = """update contingent_flows_status set continget_flow = '{continget_flow}', 
-                                                         flow_type = {flow_type}, 
-                                                         date = {date}, 
-                                                         faculty = {faculty},
-                                                         education_form = {education_form}, 
-                                                         form_fin = {fin_form}, 
-                                                         details = {details}, 
+    print(info['date'], type(info['date']))
+    update_query = """update contingent_flows_status set contingent_flow = '{contingent_flow}', 
+                                                         flow_type = '{flow_type}', 
+                                                         date = '{date}', 
+                                                         faculty = '{faculty}',
+                                                         education_form = '{education_form}', 
+                                                         form_fin = '{fin_form}', 
+                                                         details = '{details}', 
                                                          status = 'readyToSend', 
                                                          date_sync = NOW(), 
                                                          response = 'come from LDNSI'
-                      where external_id = guid_order""".format\
-        (continget_flow=info['continget_flow'], flow_type=info['flow_type'], date=info['date'], faculty=info['faculty'],
-         education_form=info['education_form'], fin_form=info['fin_form'], details=['details'])
+                      where external_id = '{guid_order}'""".format\
+        (contingent_flow=info['continget_flow'], flow_type=info['flow_type'], date=str(info['date']), faculty=info['faculty'],
+         education_form=info['education_form'], fin_form=info['fin_form'], details=info['details'], guid_order=guid_order)
 
     cursor2.execute(update_query)
     connection2.commit()
