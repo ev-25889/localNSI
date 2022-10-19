@@ -36,6 +36,7 @@ except ModuleNotFoundError:
     pip.main(['install','sqlalchemy'])
     from sqlalchemy import Column, DateTime, String, Integer
 from sqlalchemy import ForeignKey, func,Index
+from sqlalchemy.sql import select
 
 
 from sqlalchemy.orm import relationship, backref
@@ -1010,7 +1011,7 @@ class EduPlanVersion(Base, Nsiconvert):
 
 
 class StudentOrderExtract(Base, Nsiconvert):
-    __tablename__ = 'contingent_flows_status'
+    __tablename__ = 'contingent_flows'
 
     ID = Column(String, name='external_id', primary_key=True)
     StudentID = Column(String, name='student')
@@ -1041,6 +1042,15 @@ class StudentOrderExtract(Base, Nsiconvert):
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
                 self.ID, a.ID))
 
+class StudentStatus(Base, Nsiconvert):
+    __tablename__ = 'student_status'
+
+    ID = Column(Integer, name='id', primary_key=True)
+    ExternalID = Column(String, name='external_id')
+    GisscosID = Column(String, name='gisscos_id')
+
+
+student = StudentStatus()
 
 
 class DoublerNSI():
@@ -1051,6 +1061,7 @@ class DoublerNSI():
     tables = list()
     Session = sessionmaker(autoflush=False)
     wp = ''
+
 
     def __init__(self,conf,nsiclient,tandemcfg,drop_all=False,override=False):
         """Конструктор класс
@@ -1068,6 +1079,7 @@ class DoublerNSI():
         self.client = nsiclient
         self.tdm = None
         engine = create_engine(conf,pool_size=10, max_overflow=30)
+        self.conn = engine.connect()
         self.Session.configure(bind=engine)
         self.tables = self._get_class_list()
         self.override = override
@@ -1096,6 +1108,14 @@ class DoublerNSI():
                 res.append(i[1])
         res.remove(ServiceRequest)
         return res
+
+    def _get_cls_by_name(self,name):
+
+        for cls_name in self.tables:
+            if getname(cls_name)==name:
+                return cls_name
+        return None
+
 
     def _parse_datagram_to_dict(self,w):
         """ Метод обработки xml-datagram пакета
@@ -1397,6 +1417,8 @@ class DoublerNSI():
             logging.info('obj '+obj.AcademicGroupDescription)
 
         return obj
+
+
     def _check_group(self,s):
         """ Метод ищет есть ли такая группа уже в списке групп
 
@@ -1416,7 +1438,90 @@ class DoublerNSI():
             return False
         return False
 
+    def orderIsActive(self, obj):
+        if obj.ExtractTypeID in (  # зачисление 8
+                '05ccbd7d-432b-4e2a-8f02-790414cf1cad', 'f1857f4a-0905-4c1a-8333-78cf5dc381a3',
+                '2ab6db5a-f259-47a0-8398-7c62805ef1cf', 'd1e12e40-8e4d-485e-8b28-bfffee1ad3d1',
+                '6656ab39-f97e-4633-a466-74fd4c1d0141', 'acf5d3b1-06bd-43e1-8e1f-5514d8cd605f',
+                '98564702-db9c-4c61-808b-f8681a818b76', '7e12e8e0-c59f-43df-bd61-7e2517872521',
+                # отчисление 32
+                'db3ce4b8-7901-4833-a841-d6d4f00c28c9', 'd81bf93c-ecd9-40ab-a339-ee0af2135e9f',
+                '6ac268a0-82bf-4467-8b50-1c5d43a24383', '43f0e65b-a35c-4513-a92a-43d984191f87',
+                'f385c3d9-6960-4f76-9e95-8b542c64cb85', 'eff2c2ab-df23-4777-8eed-c8bf822a9cf8',
+                '0cfcdc2b-8c9d-4181-8dea-f0a3f82ba252', '8d11c54d-8f60-4f91-9e3f-2035b9741488',
+                'fe63aa5c-fbb7-4a6e-a56f-f5883ac3b6b1', 'c8d9e644-0843-425b-bb14-372fb44c5756',
+                'da37e7c6-d82a-4e3e-9cac-7cb65384c3b3', '803cf49b-b155-40f7-9f80-cee57de9aaad',
+                'f4bdc814-9f9d-4000-81c5-eb706beeeba2', 'bfe1e9a5-e7ef-4182-8c58-82e28e464d6f',
+                'aff0c6b7-72c5-4c04-bf03-c42c7cab221a', '1c963b7c-0bb7-4fa0-8bff-e03c33e22a8e',
+                'e96089cd-3ca1-4558-b861-d9520d20dd4e', '8007ced3-e128-4597-9a76-23ed76cdf599',
+                'd81d92b4-ba4f-46f4-bdc8-568d70db07e3', '1430d8f3-ef93-4c2f-a184-b7489dfc4477',
+                'af4055b1-db0c-499b-b960-5069b58ee7a9', '28a3d8dd-b0bd-479b-ad0a-1e5a156bfa4e',
+                'e1a1f6b4-b242-435b-b924-2852f54eb1f0', '9435d9fa-d20f-48af-8f86-5c0cc806e4a2',
+                # перевод 36
+                '27f46fa3-a407-4e97-80cf-9fff6342c730', '9c11147d-0f08-4fdf-b5ef-60491b97a94a'
+                                                        'ec2bcca9-9067-4767-a673-c767912f7269',
+                '61d88ce2-7e01-405d-ae0f-ee03a4bc7108'
+                'f3ee92f3-a077-4baf-9598-ba6acad14847', '6f16662a-56f7-4de4-9989-2d22eefd6d31'
+                                                        '6a5c6c89-1c7f-40d1-bfcc-328940f4e6b5',
+                '1a21ec55-25fb-43ce-8d98-d0d26f5e5263'
+                '0d36b090-e08f-4782-9a5f-3e676301e46a', '87316482-eeb2-4c73-b1bd-4dfed8669aa4'
+                                                        'aabc734a-5cad-4065-aacb-37ec468a1a40',
+                'bc9648b5-c957-4bdc-b457-ff6c27b4b43d'
+                '9490bbd4-3eaf-40f8-85ff-213052fa0c5e', 'c1ef612c-92f8-4bcc-9092-0293a853f715'
+                                                        '9f6d9bf2-3211-44c1-ae27-c351c0567d33',
+                '96420c12-3352-4e84-84db-5acc4d1e9b62'
+                '8c9f833e-34bc-4601-802b-e1c678fd9f07', '79906e48-224e-4ffe-a329-9a552d96e7a3'
+                                                        '643b98c2-9eba-4791-a75b-694af74505ca',
+                '2511d7c1-968c-4a9f-afcf-8ec45df1b56c'
+                '2ed1e3db-6966-4224-b9c4-a5d529aca35f', 'a9fd1d2c-c9f6-4945-bf60-bc7f3ee237d1'
+                                                        'fead992a-4af6-45c1-8f14-b93212f6e8f3',
+                '2fb42b71-bc2a-4da5-99b3-083528a40b7e'
+                'cd6ced95-982a-4b28-8dc4-02be3fca41b3', '85232ed9-6300-480d-953c-38363a79d443'
+                                                        '3020a194-f9a5-4f1c-b3ea-6f4ad40be513',
+                '59f7e27f-f298-480b-8f26-6e408f2667d6'
+                '6f4c4e44-6a2b-48bf-9c57-b463145ae1e2', '02918e17-2107-47fe-b270-b73a026d6753'
+                                                        '486b6385-642f-40b9-a929-f87e6b712157',
+                'e3fd4b19-2ab2-4fcc-b588-d729a954a8bb'
+                '1b644f61-dfec-471f-9973-0fc7cd1142a5', 'a74b73ac-7d58-433d-852f-db398d951f74'
+                                                        'b9f431c2-3141-4e50-9631-47d1438267bb',
+                '1111a51c-a981-4865-8989-5a5849ed7e0c'
+                # восстановление 10 
+                '84e3608b-0c5a-41d1-b909-a95a2e1292e3', 'b3e7f204-dc3d-4a11-9d49-9f0ba7fecb8c',
+                '8150630c-ddf7-4148-9843-db9aabb92b6b', 'bc5f8225-93df-470e-bc01-77f8cf468377,'
+                                                        '57fd0891-2c54-47f8-b8b8-d95ce4d34aa1',
+                '67be5441-f004-4233-a495-8778bbfa1cda',
+                'cb656e47-161c-4857-af2b-e6abc6515dfa', '15bbb290-4a6e-4c7c-80be-7362c24c2f45',
+                '14299764-9891-447f-a16e-d23d7ef35946', '397850c9-bf02-4655-9ed9-4096feb85bf3',
+                # выход в академический отпуск 2
+                'be056f5a-9391-45f6-8b44-b9eaaf25cb36', '57f8cc1e-4241-423a-8e76-2ea8bc73f816'
+        ):
+            msg = 'righ type'
+           # logging.debug(msg)
+            #print('righ type')
+            return True
+        else:
+            msg = 'wrong type'
+            #logging.debug(msg)
+            #print('wrong type')
+            return False
 
+    def studentIsActive(self, id):
+        session = self.Session()
+        cls_name = self._get_cls_by_name('StudentStatus')
+        try:
+            q = session.query(cls_name).filter_by(ExternalID=id)
+            for row in q:
+                print("ID: ", row.ExternalID)
+            return True
+        except Exception:
+            print('No row was found when one was required')
+            return False
+        # print(s)
+        # if s is None:
+        # return False
+
+    # else:
+    #  return True
 
     def _event_new_object(self,obj):
         """ Метод событие создание нового объекта в БД
@@ -1433,27 +1538,16 @@ class DoublerNSI():
         AcademicGroupDescription заполненное специальным образом
 
         """
-
+        ret = True
         if isinstance(obj,AcademicGroup):
             pass
 #            obj = self._event_new_academicgroup(obj)
         if isinstance(obj, StudentOrderExtract):
-            # если объект принадлежит классу ПРИКАЗЫ, то надо проверить его поле ExtractTypeID на соответствие одному из
-        # ид , которые нас интересуют. После этого, либо пропускать объект, либо продолжать все по сценарию....
-            if obj.ExtractTypeID in  ('05ccbd7d-432b-4e2a-8f02-790414cf1cad', 'f1857f4a-0905-4c1a-8333-78cf5dc381a3',
-                                      '2ab6db5a-f259-47a0-8398-7c62805ef1cf', 'd1e12e40-8e4d-485e-8b28-bfffee1ad3d1',
-                                      '6656ab39-f97e-4633-a466-74fd4c1d0141', 'acf5d3b1-06bd-43e1-8e1f-5514d8cd605f',
-                                      '98564702-db9c-4c61-808b-f8681a818b76', '7e12e8e0-c59f-43df-bd61-7e2517872521'):
-                msg = 'righ type'
-                logging.debug(msg)
-                return obj
-            else:
-                msg = 'wrong type'
-                logging.debug(msg)
-                return None
-        return obj
-
-
+            order = self.orderIsActive(obj=obj)
+            student = self.studentIsActive(id=obj.StudentID)
+            print('4: ', order)
+            print('5: ', student)
+            return (order and student)
 
     def _process_package(self,package):
         """ Метод обрабатывает пакет из очереди
@@ -1491,7 +1585,7 @@ class DoublerNSI():
                 except NoResultFound:
                     # для нового объекта запускаем событие
                     # смотрим нужно ли что то делать с новым объектом
-                    print(self._event_new_object(obj))
+                    print('xtnen',self._event_new_object(obj))
                     obj = self._event_new_object(obj) 
                     newobjs.append(obj)
                     continue
@@ -1555,7 +1649,7 @@ class DoublerNSI():
                 except NoResultFound:
                     # для нового объекта запускаем событие
                     # смотрим нужно ли что то делать с новым объектом
-                    # print('print _process_pacage NoResultFound: ',self._event_new_object(obj))
+                    print('print _process_pacage NoResultFound: ',self._event_new_object(obj))
                     obj = self._event_new_object(obj) 
                     session.add(obj)
                     continue
@@ -1604,12 +1698,6 @@ class DoublerNSI():
                 logging.info(msg)
         sess.close()
 
-    def _get_cls_by_name(self,name):
-
-        for cls_name in self.tables:
-            if getname(cls_name)==name:
-                return cls_name
-        return None
 
     def update_from_xml(self,file_name,dir_name):
         """ Метод обновляет справочник из файла выгруженного из НСИ
@@ -1665,7 +1753,8 @@ class DoublerNSI():
                 text =  bytes(bytearray(prev) + bytearray(text))
                 prev = bytes('',encoding='utf-8')
             for i in self.pars_to_obj(text,b_tag,end_tag,cls_name,tag_name):
-                self.add(i)
+                print('2: ', self.add(i))
+
                 # print('print i: ', i, type(i))
                 count += 1
             k +=1
@@ -1723,18 +1812,20 @@ class DoublerNSI():
         try:
             q = session.query(obj.__class__).filter_by(ID=obj.ID).one()
             #logging.debug('studentOrderExtract dose not find in contingent_flows_status')
-            # print('print add try: ')
+            print('3A: ', self._event_new_object(obj))
+
         except NoResultFound:
             # для нового объекта запускаем событие
             # смотрим нужно ли что то делать с новым объектом
-            # print('add, _event_new_object: ', self._event_new_object(obj))
+            print('3: ', self._event_new_object(obj))
             #logging.debug('studentOrderExtract is found in contingent_flows_status')
-            obj = self._event_new_object(obj)
-            if self._event_new_object(obj) is not None:
+            # obj = self._event_new_object(obj)
+            if self._event_new_object(obj) is True:
                 session.add(obj)
                 session.commit()
+                print('Приказ {} нужного типа и студент {} активен'.format(obj.ID, obj.StudentID))
             else:
-                print('Это приказ не о заачислении')
+                print('Приказ {} не того типа или студент {} не активен'.format(obj.ID, obj.StudentID))
             return
         # если сущствует обновим.
         q.update(obj)
@@ -1834,7 +1925,7 @@ if __name__=='__main__':
             msg = "find xml file %s to process"%(f_name,)
             logging.debug(msg)
             logging.debug('begin process')
-            dnsi.update_from_xml(f_name, input_dir)
+            print('1: ', dnsi.update_from_xml(f_name, input_dir))
             logging.debug("end process of file %s"%(f_name,))
 
 
