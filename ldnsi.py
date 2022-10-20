@@ -1048,6 +1048,7 @@ class StudentStatus(Base, Nsiconvert):
     ID = Column(Integer, name='id', primary_key=True)
     ExternalID = Column(String, name='external_id')
     GisscosID = Column(String, name='gisscos_id')
+    Status = Column(String, name='status')
 
 
 student = StudentStatus()
@@ -1496,25 +1497,33 @@ class DoublerNSI():
                 'be056f5a-9391-45f6-8b44-b9eaaf25cb36', '57f8cc1e-4241-423a-8e76-2ea8bc73f816'
         ):
             msg = 'righ type'
-           # logging.debug(msg)
+            logging.debug(msg)
             #print('righ type')
             return True
         else:
             msg = 'wrong type'
-            #logging.debug(msg)
+            logging.debug(msg)
             #print('wrong type')
             return False
 
     def studentIsActive(self, id):
         session = self.Session()
         cls_name = self._get_cls_by_name('StudentStatus')
+        idd = 'ccfabed3-e465-4c54-8da9-4fa84173242c'
         try:
             q = session.query(cls_name).filter_by(ExternalID=id)
+            print('q: ', q, type(q))
             for row in q:
                 print("ID: ", row.ExternalID)
-            return True
+                msg = 'active student'
+                logging.debug(msg)
+                return True
+            return False
+
         except Exception:
             print('No row was found when one was required')
+            msg = 'not active student'
+            logging.debug(msg)
             return False
         # print(s)
         # if s is None:
@@ -1760,12 +1769,13 @@ class DoublerNSI():
             k +=1
         ind = k*size_in_bytes-len(prev)
         for i in self.pars_to_obj(prev,b_tag,end_tag,cls_name,tag_name):
+            print('2: ')
             self.add(i)
             # print('print i 2: ', i, type(i))
             count += 1
         # Удаляем файл.
         f.close()
-        os.remove(dir_name+'/'+file_name)
+        #os.remove(dir_name+'/'+file_name)
         msg = 'Processed file '+file_name+'. Objects '+getname(cls_name)+\
             ' loaded:'+str(count)
         logging.info(msg)
@@ -1812,12 +1822,12 @@ class DoublerNSI():
         try:
             q = session.query(obj.__class__).filter_by(ID=obj.ID).one()
             #logging.debug('studentOrderExtract dose not find in contingent_flows_status')
-            print('3A: ', self._event_new_object(obj))
+            print('3A, если объект есть в бд: ', self._event_new_object(obj))
 
         except NoResultFound:
             # для нового объекта запускаем событие
             # смотрим нужно ли что то делать с новым объектом
-            print('3: ', self._event_new_object(obj))
+            print('3, если объекта нет в бд: ', self._event_new_object(obj))
             #logging.debug('studentOrderExtract is found in contingent_flows_status')
             # obj = self._event_new_object(obj)
             if self._event_new_object(obj) is True:
