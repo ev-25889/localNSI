@@ -1496,14 +1496,10 @@ class DoublerNSI():
                 # выход в академический отпуск 2
                 'be056f5a-9391-45f6-8b44-b9eaaf25cb36', '57f8cc1e-4241-423a-8e76-2ea8bc73f816'
         ):
-            msg = 'righ type'
-            logging.debug(msg)
-            #print('righ type')
+            logging.debug('righ type')
             return True
         else:
-            msg = 'wrong type'
-            logging.debug(msg)
-            #print('wrong type')
+            logging.debug('wrong type')
             return False
 
     def studentIsActive(self, id):
@@ -1512,25 +1508,22 @@ class DoublerNSI():
         idd = 'ccfabed3-e465-4c54-8da9-4fa84173242c'
         try:
             q = session.query(cls_name).filter_by(ExternalID=id)
-            print('q: ', q, type(q))
+            a = ''
             for row in q:
-                print("ID: ", row.ExternalID)
-                msg = 'active student'
-                logging.debug(msg)
+                a = row.ExternalID
+                logging.debug('active student')
+            session.close()
+            if a != '':
                 return True
-            return False
+            else:
+                logging.debug('not active student')
+                return False
 
         except Exception:
             print('No row was found when one was required')
-            msg = 'not active student'
-            logging.debug(msg)
+            session.close()
             return False
-        # print(s)
-        # if s is None:
-        # return False
 
-    # else:
-    #  return True
 
     def _event_new_object(self,obj):
         """ Метод событие создание нового объекта в БД
@@ -1554,8 +1547,6 @@ class DoublerNSI():
         if isinstance(obj, StudentOrderExtract):
             order = self.orderIsActive(obj=obj)
             student = self.studentIsActive(id=obj.StudentID)
-            print('4: ', order)
-            print('5: ', student)
             return (order and student)
 
     def _process_package(self,package):
@@ -1762,20 +1753,17 @@ class DoublerNSI():
                 text =  bytes(bytearray(prev) + bytearray(text))
                 prev = bytes('',encoding='utf-8')
             for i in self.pars_to_obj(text,b_tag,end_tag,cls_name,tag_name):
-                print('2: ', self.add(i))
+                self.add(i)
 
-                # print('print i: ', i, type(i))
                 count += 1
             k +=1
         ind = k*size_in_bytes-len(prev)
         for i in self.pars_to_obj(prev,b_tag,end_tag,cls_name,tag_name):
-            print('2: ')
             self.add(i)
-            # print('print i 2: ', i, type(i))
             count += 1
         # Удаляем файл.
         f.close()
-        #os.remove(dir_name+'/'+file_name)
+        os.remove(dir_name+'/'+file_name)
         msg = 'Processed file '+file_name+'. Objects '+getname(cls_name)+\
             ' loaded:'+str(count)
         logging.info(msg)
@@ -1789,9 +1777,7 @@ class DoublerNSI():
             if len(self.wp)>0:
                 w = self.wp+text[:i-1]
                 self.wp = ''
-                # print('print pars_to_obj w_decode: ', w.decode(encoding='utf-8'))
                 res = xmltodict.parse(w.decode(encoding='utf-8'))
-                # print('print pars_to_obj res: ', res)
                 obj = cls_name(dict(res[tag_name]))
                 text = text[i:]
                 yield obj
@@ -1813,7 +1799,6 @@ class DoublerNSI():
             
             res = xmltodict.parse(w.decode(encoding='utf-8'))
             obj = cls_name(dict(res[tag_name]))
-            # print('print parse_to_obj obj: ', obj)
             yield obj
 
     
@@ -1822,20 +1807,16 @@ class DoublerNSI():
         try:
             q = session.query(obj.__class__).filter_by(ID=obj.ID).one()
             #logging.debug('studentOrderExtract dose not find in contingent_flows_status')
-            print('3A, если объект есть в бд: ', self._event_new_object(obj))
-
+            print('Такой приказ уже добавлен в бд: ', self._event_new_object(obj))
         except NoResultFound:
             # для нового объекта запускаем событие
             # смотрим нужно ли что то делать с новым объектом
-            print('3, если объекта нет в бд: ', self._event_new_object(obj))
-            #logging.debug('studentOrderExtract is found in contingent_flows_status')
-            # obj = self._event_new_object(obj)
             if self._event_new_object(obj) is True:
                 session.add(obj)
                 session.commit()
-                print('Приказ {} нужного типа и студент {} активен'.format(obj.ID, obj.StudentID))
+                print('Приказ {} нужного типа и студент {} активен. Приказ добалвен в бд'.format(obj.ID, obj.StudentID))
             else:
-                print('Приказ {} не того типа или студент {} не активен'.format(obj.ID, obj.StudentID))
+                print('Приказ {} не того типа или студент {} не активен. Приказ не добавлен в бд'.format(obj.ID, obj.StudentID))
             return
         # если сущствует обновим.
         q.update(obj)
