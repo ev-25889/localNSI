@@ -1690,6 +1690,7 @@ class DoublerNSI():
                 # найдем если уже существует
                 try:
                     q = session.query(obj.__class__).filter_by(ID=obj.ID).one()
+                    print('trying is saccess')
                 except NoResultFound:
                     # для нового объекта запускаем событие
                     # смотрим нужно ли что то делать с новым объектом
@@ -1851,7 +1852,7 @@ class DoublerNSI():
         try:
             q = session.query(obj.__class__).filter_by(ID=obj.ID).one()
             #logging.debug('studentOrderExtract dose not find in contingent_flows_status')
-            print('Такой приказ уже добавлен в бд: ', self._event_new_object(obj))
+            print('Такой объект уже добавлен в бд: ', self._event_new_object(obj))
         except NoResultFound:
             # для нового объекта запускаем событие
             # смотрим нужно ли что то делать с новым объектом
@@ -1862,7 +1863,7 @@ class DoublerNSI():
             else:
                 #print('Приказ {} не того типа или студент {} не активен. Приказ не добавлен в бд'.format(obj.ID, obj.StudentID))
                 pass
-            return
+
         # если сущствует обновим.
         q.update(obj)
         session.commit()
@@ -1962,7 +1963,7 @@ if __name__=='__main__':
             msg = "find xml file %s to process"%(f_name,)
             logging.debug(msg)
             logging.debug('begin process')
-            print('1: ', dnsi.update_from_xml(f_name, input_dir))
+            dnsi.update_from_xml(f_name, input_dir)
             logging.debug("end process of file %s"%(f_name,))
 
 
