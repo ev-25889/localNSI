@@ -1050,6 +1050,32 @@ class StudentStatus(Base, Nsiconvert):
     GisscosID = Column(String, name='gisscos_id')
     Status = Column(String, name='status')
 
+class EnrEnrollmentExtract(Base, Nsiconvert):
+    __tablename__ = 'enrollment_extract'
+
+    ID = Column(String, name='external_id', primary_key=True)
+    StudentID = Column(String, name='student')
+    EnrOrderID = Column(String, name='order_id')
+
+
+    def __init__(self, a):
+        Base.__init__(self)
+        fields = {
+            'StudentID': 'Student',
+            'EnrOrderID': 'EnrOrder'
+
+        }
+        self.init_from_dict(a, fields)
+
+    def to_dict(self):
+        return self.to_dict_base({})
+
+    def update(self, a):
+        if self.ID == a.ID:
+            self.base_update(a)
+        else:
+            logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
+                self.ID, a.ID))
 
 
 class DoublerNSI():
@@ -1562,7 +1588,11 @@ class DoublerNSI():
             order = self.orderIsActive(obj=obj)
             student = self.studentIsActive(id=obj.StudentID)
             return (order and student)
-
+        if isinstance(obj, EnrEnrollmentExtract):
+            student = self.studentIsActive(id=obj.StudentID)
+            return student
+        else:
+            return True
     def _process_package(self,package):
         """ Метод обрабатывает пакет из очереди
 
@@ -1828,9 +1858,10 @@ class DoublerNSI():
             if self._event_new_object(obj) is True:
                 session.add(obj)
                 session.commit()
-                print('Приказ {} нужного типа и студент {} активен. Приказ добалвен в бд'.format(obj.ID, obj.StudentID))
+                #print('Приказ {} нужного типа и студент {} активен. Приказ добалвен в бд'.format(obj.ID, obj.StudentID))
             else:
-                print('Приказ {} не того типа или студент {} не активен. Приказ не добавлен в бд'.format(obj.ID, obj.StudentID))
+                #print('Приказ {} не того типа или студент {} не активен. Приказ не добавлен в бд'.format(obj.ID, obj.StudentID))
+                pass
             return
         # если сущствует обновим.
         q.update(obj)
