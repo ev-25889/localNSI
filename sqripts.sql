@@ -130,8 +130,61 @@ from
                     (new."HumanSNILS")::text))) execute procedure update_student_status_from_human()
 _________________________________________________________________________________________________________________________
 
+--Новая таблица по поступившим плюс триггер и функция для добавления в общую таблицу contingent_flow
+CREATE TABLE public.enrollment_extract (
+	external_id varchar NOT NULL,
+	student varchar NULL,
+	order_id varchar NULL,
+	CONSTRAINT enrollment_extract_pkey PRIMARY KEY (external_id)
+);
 
+CREATE TABLE public.contingent_flows (
+	external_id varchar NOT NULL,
+	student varchar NOT NULL,
+	contingent_flow varchar NULL,
+	flow_type varchar NULL,
+	"date" varchar NULL,
+	faculty varchar NULL,
+	education_form varchar NULL,
+	form_fin varchar NULL,
+	details varchar NULL,
+	gisscos_id varchar NULL,
+	status varchar NULL DEFAULT 'not_in_gis'::character varying,
+	date_sync timestamp NULL DEFAULT now(),
+	response varchar NULL,
+	extract_type varchar NULL,
+	studentstatusstr_p varchar(50) NULL,
+	CONSTRAINT contingent_flows_pkey PRIMARY KEY (external_id)
+);
 
+-- Table Triggers
+
+create trigger check_insert after
+insert
+    on
+    public.enrollment_extract for each row execute procedure add_to_contingent();
+
+--
+CREATE OR REPLACE FUNCTION public.add_to_contingent()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    vstudent varchar(50);
+    vexternal_id varchar(50);
+BEGIN
+    IF  TG_OP = 'INSERT' THEN
+        vexternal_id = NEW."external_id";
+        vstudent = NEW."student";
+		INSERT INTO contingent_flows (external_id, student) values (vexternal_id, vstudent);
+        RETURN NEW;
+    END IF;
+   return new;
+END;
+$function$
+;
+
+___________________________________________________________________________________________________________________
 
 -- Создание таблиц
 CREATE TABLE public.disciplines (
