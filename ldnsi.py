@@ -186,7 +186,7 @@ class ServiceRequest(Base):
     datagram=Column(String)
     callCC = Column(Integer)
     callRC = Column(String)
-"""
+
 class EnrEntrant(Base,Nsiconvert):
     __tablename__ = 'enrentrant'
     ID = Column(String,primary_key=True)
@@ -758,7 +758,7 @@ class Human(Base,Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
-"""
+
 class AcademicGroup(Base,Nsiconvert):
     __tablename__ = 'academicgroup'
     ID = Column(String,primary_key=True)
@@ -806,7 +806,7 @@ class AcademicGroup(Base,Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
-"""
+
 class Employee(Base,Nsiconvert):
     __tablename__ = 'employee'
     ID = Column(String,primary_key=True)
@@ -885,7 +885,7 @@ class Principal(Base,Nsiconvert):
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
 
-"""
+
 # начинаем самодеятельность
 class RootRegistryElement(Base, Nsiconvert):
     __tablename__ = 'disciplines'
@@ -1033,7 +1033,7 @@ class StudentOrderExtract(Base, Nsiconvert):
         self.init_from_dict(a, fields)
 
     def to_dict(self):
-        return self.to_dict_base_with_check({})
+        return self.to_dict_base({})
 
     def update(self, a):
         if self.ID == a.ID:
@@ -1050,8 +1050,6 @@ class StudentStatus(Base, Nsiconvert):
     GisscosID = Column(String, name='gisscos_id')
     Status = Column(String, name='status')
 
-
-student = StudentStatus()
 
 
 class DoublerNSI():
@@ -1504,8 +1502,24 @@ class DoublerNSI():
 
     def studentIsActive(self, id):
         session = self.Session()
-        cls_name = self._get_cls_by_name('StudentStatus')
-        idd = 'ccfabed3-e465-4c54-8da9-4fa84173242c'
+        cls_name = self._get_cls_by_name('Student')
+        q = session.query(cls_name).filter_by(ID=id)
+        a = ''
+        b = ''
+        for row in q:
+            a = row.ID
+            b = row.StudentStatusID
+        session.close()
+        if b in ('8462edfe-55e3-4d64-b3d5-8933e9c82bed', 'd9d450b4-184e-4738-8710-25c53fed6263',
+                 '06365216-0c9b-4352-a80c-89a2bf8a3424', '450519a5-4a4a-477d-b1e4-4f7daf310065'):
+            msg = 'ACTIVE. Student: ' + a + '. Status: ' + b
+            logging.debug(msg)
+            return True
+        else:
+            msg = 'NOT ACTIVE. Student: ' + a + '. Status: ' + b
+            logging.debug(msg)
+            return False
+        """
         try:
             q = session.query(cls_name).filter_by(ExternalID=id)
             a = ''
@@ -1523,7 +1537,7 @@ class DoublerNSI():
             print('No row was found when one was required')
             session.close()
             return False
-
+        """
 
     def _event_new_object(self,obj):
         """ Метод событие создание нового объекта в БД
@@ -1877,6 +1891,7 @@ if __name__=='__main__':
     if args.debug:
         dmm = logging.DEBUG
     else:
+        dmm = logging.INFO
         dmm = logging.INFO
 
     format_str='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
