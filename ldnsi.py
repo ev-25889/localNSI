@@ -258,6 +258,8 @@ class EnrEnrollmentCampaign(Base,Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
+
+
 class EnrRequestedCompetition(Base,Nsiconvert):
     __tablename__ = 'enrrequestedcompetition'
     ID = Column(String,primary_key=True)
@@ -281,7 +283,7 @@ class EnrRequestedCompetition(Base,Nsiconvert):
             'CompensationTypeID':'CompensationType',
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'EnrEnrollmentPlanID':'EnrEnrollmentPlan',
@@ -300,6 +302,7 @@ class EnrRequestedCompetition(Base,Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
+
 
 class EnrEntrantRequest(Base,Nsiconvert):
     __tablename__ = 'enrentrantrequest'
@@ -333,7 +336,7 @@ class EnrEntrantRequest(Base,Nsiconvert):
             'PersonEduDocumentID':'PersonEduDocument'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'EnrEntrantID':'EnrEntrant',
@@ -372,7 +375,7 @@ class HumanContactData(Base,Nsiconvert):
             'HumanID':'Human'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'HumanID':'Human'
@@ -386,7 +389,6 @@ class HumanContactData(Base,Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
-
 
 
 class Address(Base,Nsiconvert):
@@ -409,7 +411,7 @@ class Address(Base,Nsiconvert):
             'AddressTypeID':'AddressType'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'ParentAddressID':'Address',
@@ -460,7 +462,7 @@ class LksSessionResult(Base,Nsiconvert):
             'StudentID':'Student'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'EducationYearID':'EducationYear',
@@ -511,7 +513,7 @@ class PersonEduDocument(Base,Nsiconvert):
             'HumanID':'Human'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'AddressID':'Address',
@@ -550,7 +552,7 @@ class LksWorkResult(Base,Nsiconvert):
             'LksSessionResultID':'LksSessionResult'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'LksSessionResultID':'LksSessionResult'
@@ -623,7 +625,7 @@ class Student(Base,Nsiconvert):
             'ForeignLanguageID':'ForeignLanguage'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'EducationalOrganizationID':'Department',
@@ -645,6 +647,7 @@ class Student(Base,Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
+
 
 class IdentityCard(Base,Nsiconvert):
     __tablename__ = 'identitycard'
@@ -680,7 +683,7 @@ class IdentityCard(Base,Nsiconvert):
             'IdentityCardKindID':'IdentityCardKind'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'AddressID':'Address',
@@ -735,7 +738,7 @@ class Human(Base,Nsiconvert):
             'ForeignLanguageID':'ForeignLanguage'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'HumanAddressRuID':'AddressRu',
@@ -751,13 +754,14 @@ class Human(Base,Nsiconvert):
         }
 
         return self.to_dict_base(fields)
-       
+
     def update(self,a):
         if self.ID==a.ID:
             self.base_update(a)
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
+
 
 class AcademicGroup(Base,Nsiconvert):
     __tablename__ = 'academicgroup'
@@ -788,7 +792,7 @@ class AcademicGroup(Base,Nsiconvert):
             'EmployeeID':'Employee'
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'CaptainStudentID':'Student',
@@ -799,13 +803,14 @@ class AcademicGroup(Base,Nsiconvert):
         }
 
         return self.to_dict_base(fields)
-        
+
     def update(self,a):
         if self.ID==a.ID:
             self.base_update(a)
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
+
 
 class Employee(Base,Nsiconvert):
     __tablename__ = 'employee'
@@ -843,7 +848,7 @@ class Employee(Base,Nsiconvert):
             'PostID':'Post',
         }
         self.init_from_dict(a,fields)
-    
+
     def to_dict(self):
         fields = {
             'EmployeeDepartmentID':'Department',
@@ -863,6 +868,7 @@ class Employee(Base,Nsiconvert):
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s"%(
                 self.ID,a.ID))
 
+
 class Principal(Base,Nsiconvert):
     __tablename__ = 'principal'
     ID = Column(String,primary_key=True)
@@ -874,7 +880,7 @@ class Principal(Base,Nsiconvert):
     def __init__(self,a):
         Base.__init__(self) 
         self.init_from_dict(a,{})
-    
+
     def to_dict(self):
         return self.to_dict_base({})
 
@@ -920,7 +926,6 @@ class EducationLevelsHighSchool(Base, Nsiconvert):
     EducationLevelsHighSchoolName = Column(String, name='title')
     SubjectID = Column(String, name='direction_id')
 
-
     def __init__(self, a):
         Base.__init__(self)
         fields = {
@@ -937,6 +942,7 @@ class EducationLevelsHighSchool(Base, Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
                 self.ID, a.ID))
+
 
 class EducationalProgram(Base, Nsiconvert):
     __tablename__ = 'educational_programs'
@@ -961,6 +967,7 @@ class EducationalProgram(Base, Nsiconvert):
         else:
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
                 self.ID, a.ID))
+
 
 class EduProgramSubject(Base, Nsiconvert):
     __tablename__ = 'subject'
@@ -1042,6 +1049,7 @@ class StudentOrderExtract(Base, Nsiconvert):
             logging.error("Ошибка присвоения self.ID==a.ID %s == %s" % (
                 self.ID, a.ID))
 
+
 class StudentStatus(Base, Nsiconvert):
     __tablename__ = 'student_status'
 
@@ -1049,6 +1057,7 @@ class StudentStatus(Base, Nsiconvert):
     ExternalID = Column(String, name='external_id')
     GisscosID = Column(String, name='gisscos_id')
     Status = Column(String, name='status')
+
 
 class EnrEnrollmentExtract(Base, Nsiconvert):
     __tablename__ = 'enrollment_extract'
@@ -1087,7 +1096,6 @@ class DoublerNSI():
     Session = sessionmaker(autoflush=False)
     wp = ''
 
-
     def __init__(self,conf,nsiclient,tandemcfg,drop_all=False,override=False):
         """Конструктор класс
 
@@ -1104,7 +1112,6 @@ class DoublerNSI():
         self.client = nsiclient
         self.tdm = None
         engine = create_engine(conf,pool_size=10, max_overflow=30)
-        self.conn = engine.connect()
         self.Session.configure(bind=engine)
         self.tables = self._get_class_list()
         self.override = override
@@ -1120,7 +1127,7 @@ class DoublerNSI():
 
         Читаем какие объекты в модуле определены и выбираем из них
         те что соответсвуют таблицам в базе( имеют родителем класс
-        Base). 
+        Base).
         :return: лист классов для работы с базой
         :rtype: list
         """
@@ -1133,14 +1140,6 @@ class DoublerNSI():
                 res.append(i[1])
         res.remove(ServiceRequest)
         return res
-
-    def _get_cls_by_name(self,name):
-
-        for cls_name in self.tables:
-            if getname(cls_name)==name:
-                return cls_name
-        return None
-
 
     def _parse_datagram_to_dict(self,w):
         """ Метод обработки xml-datagram пакета
@@ -1168,7 +1167,7 @@ class DoublerNSI():
         else:
             logging.debug(res)
             return None
-        
+
         result = dict()
         for i in res:
             # собираем только данные для словорей
@@ -1183,7 +1182,7 @@ class DoublerNSI():
                 else:
                     result[x[0]].append(dict(res[i]))
         return result
-    
+
     def _event_new_academicgroup(self,obj):
         """ Метод вызывается при создании новой группы
 
@@ -1259,7 +1258,7 @@ class DoublerNSI():
             ep = self.find_by_id(
                 'EducationalProgram',
                 obj.EducationalProgramID
-                )
+            )
             if ep is None:
                 msg = """Возникла ошибка в формировании уникального
                 имени группы для группы ID=%s c именем %s: 
@@ -1269,7 +1268,7 @@ class DoublerNSI():
                     obj.ID,
                     obj.AcademicGroupName,
                     obj.EducationalProgramID
-                    )
+                )
                 logging.error(msg)
                 return obj
             if ep.DevelopFormID is None:
@@ -1281,7 +1280,7 @@ class DoublerNSI():
                     obj.ID,
                     obj.AcademicGroupName,
                     obj.EducationalProgramID
-                    )
+                )
                 logging.error(msg)
                 return obj
             df = self.find_by_id('DevelopForm',ep.DevelopFormID)
@@ -1295,7 +1294,7 @@ class DoublerNSI():
                     obj.AcademicGroupName,
                     obj.EducationalProgramID,
                     ep.DevelopFormID
-                    )
+                )
                 logging.error(msg)
                 return obj
             s2 = df.DevelopFormGroup
@@ -1310,7 +1309,7 @@ class DoublerNSI():
                     obj.ID,
                     obj.AcademicGroupName,
                     obj.EducationalProgramID
-                    )
+                )
                 logging.error(msg)
                 return obj
             if ep.DevelopConditionID==DEVEL_COND_2:
@@ -1351,7 +1350,7 @@ class DoublerNSI():
                     obj.ID,
                     obj.AcademicGroupName,
                     obj.DepartmentID
-                    )
+                )
                 logging.error(msg)
                 return obj
             # S7: [Уровень]
@@ -1364,13 +1363,13 @@ class DoublerNSI():
                     obj.AcademicGroupName,
                     obj.EducationalProgramID,
                     ep.EduProgramQualificationID
-                    )
+                )
                 logging.error(msg)
                 return obj
             epq = self.find_by_id(
                 'EduProgramQualification',
                 ep.EduProgramQualificationID
-                )
+            )
             if epq is None:
                 msg = """Возникла ошибка в формировании уникального
                 имени группы для группы ID=%s c именем %s: 
@@ -1380,7 +1379,7 @@ class DoublerNSI():
                     obj.AcademicGroupName,
                     obj.EducationalProgramID,
                     ep.EduProgramQualificationID
-                    )
+                )
                 logging.error(msg)
                 return obj
 
@@ -1403,7 +1402,7 @@ class DoublerNSI():
                         s7 = 'СПО'
                     else:
                         s7 = 'С'
-            
+
             #S3: [Название специализации]
             s3 = str(ep.EducationalProgramID)
             # S6: [Номер группы]:
@@ -1443,7 +1442,6 @@ class DoublerNSI():
 
         return obj
 
-
     def _check_group(self,s):
         """ Метод ищет есть ли такая группа уже в списке групп
 
@@ -1452,7 +1450,7 @@ class DoublerNSI():
         :return: True если нет такой группы, иначе False
         :rtype: boolean
         """
-        
+
         session = self.Session()
         cls_name = self._get_cls_by_name('AcademicGroup')
         try:
@@ -1545,25 +1543,6 @@ class DoublerNSI():
             msg = 'NOT ACTIVE. Student: ' + a + '. Status: ' + b
             logging.debug(msg)
             return False
-        """
-        try:
-            q = session.query(cls_name).filter_by(ExternalID=id)
-            a = ''
-            for row in q:
-                a = row.ExternalID
-                logging.debug('active student')
-            session.close()
-            if a != '':
-                return True
-            else:
-                logging.debug('not active student')
-                return False
-
-        except Exception:
-            print('No row was found when one was required')
-            session.close()
-            return False
-        """
 
     def _event_new_object(self,obj):
         """ Метод событие создание нового объекта в БД
@@ -1580,10 +1559,10 @@ class DoublerNSI():
         AcademicGroupDescription заполненное специальным образом
 
         """
-        ret = True
+
         if isinstance(obj,AcademicGroup):
             pass
-#            obj = self._event_new_academicgroup(obj)
+        #            obj = self._event_new_academicgroup(obj)
         if isinstance(obj, StudentOrderExtract):
             order = self.orderIsActive(obj=obj)
             student = self.studentIsActive(id=obj.StudentID)
@@ -1593,6 +1572,7 @@ class DoublerNSI():
             return student
         else:
             return True
+
     def _process_package(self,package):
         """ Метод обрабатывает пакет из очереди
 
@@ -1601,9 +1581,9 @@ class DoublerNSI():
 
         Входящий пакет объект класс ServiceRequest.
         Метод опредляет тип действий с пакетом по свойству
-        operationType. 
+        operationType.
         """
-        
+
         w = package.datagram
         if len(w)==0:
             return True
@@ -1629,8 +1609,7 @@ class DoublerNSI():
                 except NoResultFound:
                     # для нового объекта запускаем событие
                     # смотрим нужно ли что то делать с новым объектом
-                    print('xtnen',self._event_new_object(obj))
-                    obj = self._event_new_object(obj) 
+                    obj = self._event_new_object(obj)
                     newobjs.append(obj)
                     continue
                 # если сущствует, применим событие обновления объекта.
@@ -1649,19 +1628,19 @@ class DoublerNSI():
                     continue
                 q.update(obj)
                 session.commit()
-            session.close()  
-            return True      
+            session.close()
+            return True
         if package.operationType=='delete':
             # Попытаемся преобразовать пакет к OrderedDict
             res = self._parse_datagram_to_dict(w)
             session = self.Session()
             for tn in res:
-                
+
                 for el in res[tn]:
-                    
+
                     try:
                         q = session.query(tn).\
-                             filter_by(ID=el['ID']).one()
+                            filter_by(ID=el['ID']).one()
                     except NoResultFound:
                         continue
                     logging.debug(str(q.__class__)+' delete ID='+q.ID)
@@ -1684,28 +1663,25 @@ class DoublerNSI():
                 for el in res[tn]:
                     nsi_objs.append(tn(el))
             # Пройдемася по полученному списку объектов
-            # и загоним их в базу 
+            # и загоним их в базу
             session = self.Session()
             for obj in nsi_objs:
                 # найдем если уже существует
                 try:
                     q = session.query(obj.__class__).filter_by(ID=obj.ID).one()
-                    print('trying is saccess')
                 except NoResultFound:
                     # для нового объекта запускаем событие
                     # смотрим нужно ли что то делать с новым объектом
-                    print('print _process_pacage NoResultFound: ',self._event_new_object(obj))
-                    obj = self._event_new_object(obj) 
+                    obj = self._event_new_object(obj)
                     session.add(obj)
                     continue
                 # если сущствует обновим применим событие
                 # обновление объекта
-                obj = self._event_update_object(obj)  
+                obj = self._event_update_object(obj)
                 q.update(obj)
             session.commit()
-            session.close()  
-            return True      
-
+            session.close()
+            return True
 
         return False
 
@@ -1714,15 +1690,16 @@ class DoublerNSI():
         if isinstance(obj,AcademicGroup):
             # obj = self._event_new_academicgroup(obj)
             pass
-        
+
         return obj
+
     def serve_requests(self):
         """ Метод обработки очереди пакетов от НСИ
 
         Метод читает пакеты из таблицы packages и оборабатывает
         их содержание. Поле обработки пакеты удаляются из очерди.
         """
-        
+
         sess = self.Session()
         while True:
             packages = sess.query(ServiceRequest).limit(10).all()
@@ -1737,12 +1714,18 @@ class DoublerNSI():
                     i += 1
                     sess.delete(package)
             sess.commit()
-            
+
             if i>0:
                 msg = 'Processed '+str(i)+' packages from NSI'
                 logging.info(msg)
         sess.close()
 
+    def _get_cls_by_name(self,name):
+
+        for cls_name in self.tables:
+            if getname(cls_name)==name:
+                return cls_name
+        return None
 
     def update_from_xml(self,file_name,dir_name):
         """ Метод обновляет справочник из файла выгруженного из НСИ
@@ -1760,7 +1743,7 @@ class DoublerNSI():
         if not os.path.isfile(dir_name+'/'+file_name):
             s = 'File '+file_name+' do not exist'
             logging.error(s)
-            return 
+            return
         f = open(dir_name+'/'+file_name, 'r+b')
         tag_name = file_name.replace('Type.xml','')
         cls_name = self._get_cls_by_name(tag_name)
@@ -1774,13 +1757,13 @@ class DoublerNSI():
         k = 0
         prev = bytes('',encoding='utf-8')
         count = 0
-        f_read  = partial(f.read, size_in_bytes)
-        for text in iter(f_read, ''):                       # Создаем итератор для читаемого файла с размером
+        f_read = partial(f.read, size_in_bytes)
+        for text in iter(f_read, ''):
             if len(text)==0:
                 break
-            if not text.endswith(end_tag):                  # если строка не заканчивается закрывающимся тегом, то
+            if not text.endswith(end_tag):
                 # if file contains a partial line at the end, then don't
-                # use it when counting the substring count. 
+                # use it when counting the substring count.
                 rt = text.rsplit(end_tag, 1)
                 if len(rt)==1:
                     text = rt[0]+end_tag
@@ -1788,18 +1771,17 @@ class DoublerNSI():
                 else:
                     text = rt[0]+end_tag
                     rest = rt[1]
-            
+
                 # pre-pend the previous partial line if any.
-                text =  bytes(bytearray(prev) + bytearray(text))
+                text = bytes(bytearray(prev) + bytearray(text))
                 prev = rest
             else:
                 # if the text ends with a '\n' then simple pre-pend the
-                # previous partial line. 
-                text =  bytes(bytearray(prev) + bytearray(text))
+                # previous partial line.
+                text = bytes(bytearray(prev) + bytearray(text))
                 prev = bytes('',encoding='utf-8')
             for i in self.pars_to_obj(text,b_tag,end_tag,cls_name,tag_name):
                 self.add(i)
-
                 count += 1
             k +=1
         ind = k*size_in_bytes-len(prev)
@@ -1813,12 +1795,12 @@ class DoublerNSI():
             ' loaded:'+str(count)
         logging.info(msg)
 
-    def pars_to_obj(self,text,b_tag,end_tag,cls_name,tag_name):     # возвращает объект <__main__.StudentOrderExtract object at 0x000002327817C550>
+    def pars_to_obj(self,text,b_tag,end_tag,cls_name,tag_name):
         res = dict()
         # TODO: Исправить кривой код поиска нужных
-        # объектов в тексте 
+        # объектов в тексте
         while text.find(b_tag)!=-1:
-            i = text.find(b_tag)                # находим индекс открывающего тега
+            i = text.find(b_tag)
             if len(self.wp)>0:
                 w = self.wp+text[:i-1]
                 self.wp = ''
@@ -1827,12 +1809,11 @@ class DoublerNSI():
                 text = text[i:]
                 yield obj
 
-            
             text = text[i:]
             w = text[:text.find(end_tag)+len(end_tag)]
 
             text = text[text.find(end_tag)+len(end_tag):]
-            
+
             if w[len(b_tag):].find(b_tag)>0:
                 if len(text)==0:
                     self.wp = text[:text.find(end_tag)+len(end_tag)]
@@ -1841,39 +1822,35 @@ class DoublerNSI():
                 w += text[:text.find(end_tag)+len(end_tag)]
                 text = text[text.find(end_tag)+len(end_tag):]
 
-            
             res = xmltodict.parse(w.decode(encoding='utf-8'))
             obj = cls_name(dict(res[tag_name]))
             yield obj
 
-    
     def add(self,obj):
         session = self.Session()
         try:
             q = session.query(obj.__class__).filter_by(ID=obj.ID).one()
-            #logging.debug('studentOrderExtract dose not find in contingent_flows_status')
-            print('Такой объект уже добавлен в бд: ', self._event_new_object(obj))
         except NoResultFound:
             # для нового объекта запускаем событие
             # смотрим нужно ли что то делать с новым объектом
-            if self._event_new_object(obj) is True:
+            if self._event_new_object(obj):
                 session.add(obj)
                 session.commit()
                 #print('Приказ {} нужного типа и студент {} активен. Приказ добалвен в бд'.format(obj.ID, obj.StudentID))
             else:
                 #print('Приказ {} не того типа или студент {} не активен. Приказ не добавлен в бд'.format(obj.ID, obj.StudentID))
                 pass
+            return
 
         # если сущствует обновим.
         q.update(obj)
         session.commit()
-        
 
     def getall(self,name):
         """ Метод возвращает содержания справочника в формате нужном
         для ukserver
         """
-        
+
         cls_name = self._get_cls_by_name(name)
         session = self.Session()
         result = dict()
@@ -1882,14 +1859,12 @@ class DoublerNSI():
             result.update({obj.ID:dict(obj.to_dict())})
         return result
 
-        
-
     def update(self,table,data):
         cls_name = self._get_cls_by_name(table)
         for i in data:
             obj = cls_name(data[i])
             self.add(obj)
-        
+
     def find_by_id(self,table,i):
         session = self.Session()
         cls_name = self._get_cls_by_name(table)
@@ -1905,7 +1880,6 @@ class DoublerNSI():
         q = session.query(LksSessionResult).filter_by(StudentID=i).all()
         for obj in q:
             yield obj.to_dict()
-
 
 
 if __name__=='__main__':
@@ -1924,11 +1898,10 @@ if __name__=='__main__':
         dmm = logging.DEBUG
     else:
         dmm = logging.INFO
-        dmm = logging.INFO
 
     format_str='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(filename=generate_logfile_name('nsiSync',
-       period='day'),filemode='a',format=format_str,level=logging.DEBUG)      # меняю level=dmm на level=logging.DEBUG
+       period='day'),filemode='a',format=format_str,level=dmm)      # меняю level=dmm на level=logging.DEBUG
 
     logging.info('start script ldnsi')
     try:
@@ -1953,11 +1926,9 @@ if __name__=='__main__':
 
             logging.info('Droping all tables in database.')
         dnsi = DoublerNSI(conf,nsiconf,tandemcfg,drop_all=args.drop)
-
         while True:
             f_name = get_xmlfile_from_dir(input_dir)
-            
-            
+
             if f_name is None:
                 break
             msg = "find xml file %s to process"%(f_name,)
@@ -1965,7 +1936,6 @@ if __name__=='__main__':
             logging.debug('begin process')
             dnsi.update_from_xml(f_name, input_dir)
             logging.debug("end process of file %s"%(f_name,))
-
 
         logging.debug("begin serve_requests")
         dnsi.serve_requests()
