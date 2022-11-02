@@ -7,12 +7,20 @@ from psycopg2 import Error
 atributes = {'disciplines' : ['external_id', 'title'],
              'educational_programs' : ['external_id', 'title','direction', 'code_direction', 'start_year', 'end_year'],
              'study_plans' : ['external_id', 'title', 'direction', 'code_direction', 'start_year', 'end_year',
-                              'education_form', 'educational_program']}
+                              'education_form', 'educational_program'],
+             'contingent_flows': ['student', 'contingent_flow', 'flow_type', 'date', 'faculty', 'education_form',
+                                  'form_fin', 'details', 'external_id'],
+             'study_plans_disciplines': ['study_plan', 'discipline', 'semester'],
+             'study_plans_students': ['study_plan', 'student']
+             }
 
-object_names = {'RootRegistryElement' : 'disciplines',
-                'EducationLevelHighSchool' : 'educational_programs',
-                'EppWorkPlan' : 'study_plans',
-                'EppWorkPlanBase' : 'study_plans'}
+object_names = {'RootRegistryElement' : ['disciplines', 'disciplines'],  # [адрес/таблицы, массив]
+                'EducationalPrograms' : ['educational_programs','educational_programs'],
+                'EduPlanVersion' : ['study_plans','study_plans'],
+                'StudentOrderExtract' : ['contingent_flows','contingent_flows'],
+                'StudyPlanDiscipline' : ['study_plans_disciplines', 'study_plan_disciplines'],
+                'StudyPlanStudent': ['study_plans_students', 'study_plan_students']}
+
 def change_status(query_type, table, responce=None, external_id=None, status=None, number=None):
     """
     Метод изменяет статус записи  в заввисимости от действия (обновление, добавление... (удаление?))
@@ -52,9 +60,10 @@ def id_list(object, status=None, limit=None):
     Возвращает:
     список идентификаторов ID из таблицы **object = object**, для которых **status = status**
 	"""
+    print('id_list')
     if limit == None:
         limit = 500
-    table = object_names[object]
+    table = object_names[object][0]
     if status is None:                              # не указан статус - возвращаем записи со всеми статусами и без них
         select_query = '''select "external_id" from {table} limit({limit})'''.format(table=table, limit=limit)
     elif status == '':                              # указан пустой статус - возвращаем записи без статуса
@@ -64,11 +73,15 @@ def id_list(object, status=None, limit=None):
         select_query = '''select "external_id" from {table} where "status" = '{status}' limit({limit})'''.format(
             table=table, status=status, limit=limit)
 
+    if object == 'StudentOrderExtract':
+        select_query = '''select cf."external_id" from contingent_flows cf 
+                          join student_status ss on ss.external_id = cf.student 
+                          where ss.status = 'equal' and cf.status = '{}' limit({}) '''.format(status, limit)
     cursor.execute(select_query)
     select = cursor.fetchall()
     list_of_id = list()
     for row in select:
-        list_of_id.append(row[0])
+        list_of_id.append(str(row[0]))
     id_param = "'" + "','".join(list_of_id) + "'"
     if len(id_param) > 2:
         return id_param  # тип параметра - строка
@@ -76,14 +89,14 @@ def id_list(object, status=None, limit=None):
         return 'записи не найдены'
 
 
-def make_dict(object):
+def make_dict(object, count):
     # получить инфу по ид из бд в словарь
-    id = id_list(object=object, status='new', limit=10)
+    id = id_list(object=object, status='new', limit=count)
     if id == 'записи не найдены' or id == 'такой таблицы нет':
         return 'получить словарь невозможно: {}'.format(id)
     else:
-        atribut = ', '.join(atributes[object_names[object]])
-        table = object_names[object]
+        atribut = ', '.join(atributes[object_names[object][0]])
+        table = object_names[object][0]
         select_query = '''select {atrib} from {table} where "external_id" in ({id})'''\
             .format(atrib=atribut,table=table,id=id)            # я могу пытаться в запрос вместо списка ид
         cursor.execute(select_query)                            # засунуть другие ретерны 'записи не найдены' или
@@ -93,51 +106,46 @@ def make_dict(object):
             one_subject_info = list()
             for r in res:
                 one_subject_info.append(r)
-            dictant = dict(zip(atributes[object_names[object]], one_subject_info))
+            dictant = dict(zip(atributes[object_names[object][0]], one_subject_info))
             info_list.append(dictant)
         finall_dict = {'organization_id': 'f07f886b-d609-4a23-8ada-53e1717c1b9c',
-                       table: info_list}
+                       object_names[object][1]: info_list}
         return finall_dict
 
-def save(object, file):
+def save(object, file, count):
     # сохранить итоговый словарь в файл
-    body = make_dict(object=object)
+    body = make_dict(object=object, count=count)
     with open(file, 'w', encoding='utf-8') as fp:  # открываем файл для записи
         json.dump(body, fp, ensure_ascii=False)
 
-def send_to_gis(object):
-    save(object=object, file='forGIS.json')
+def send_to_gis(object, count):
+    save(object=object, file='forGIS.json', count=count)
     with open('forGIS.json', 'r', encoding="utf8") as f:
         data = json.load(f)
-    print("Отправляем данные {} в ГИС СЦОС".format(object_names[object]))
+    print("Отправляем данные {} в ГИС СЦОС".format(object_names[object][0]))
     responce = requests.post(url='https://test.online.edu.ru/vam/api/v2/{}'.format(object_names[object]),
                              headers={"X-CN-UUID": "e52e03e0-7038-4090-a9f6-628367c0094d"}, json=data, verify=False)
     try:
         responce = responce.json()
         print(responce)
-        print("Запрос в гИС отправился")
         for i in range(len(responce['results'])):
-
             try:
                 change_status(query_type='post', responce=responce, table=object_names[object], number=i)
                 "Статус изменен успешно"
             except Exception:
-
                 change_status(query_type='error', responce=responce, table=object_names[object], number=i)
                 "Статус изменен с ошибкой "
-            """"""
     except Exception:
         print('(((')
+
 
 try:
     # Подключение к базе данных
     connection = psycopg2.connect(user="donsitest", password="TS4d#dkpf3WE1",
                                   host="192.168.25.103", port="5432", database="doubnsitest")
     cursor = connection.cursor()
-    # print(send_to_gis(object='RootRegistryElement'))
-    # print(send_to_gis(object='EducationLevelHighSchool'))
-    print(make_dict(object='EducationLevelHighSchool'))
-    print(send_to_gis(object='EducationLevelHighSchool'))
+
+    print(send_to_gis(object='StudentOrderExtract'))
 except (Exception, Error) as error:
     print("Ошибка при работе с PostgreSQL", error)
 finally:
